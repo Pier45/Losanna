@@ -1,2 +1,2 @@
 # Losanna
- Analysis of the syncronization between ECG and respiration
+ Analysis of the synchronization between ECG and respiration
