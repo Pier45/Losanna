@@ -1,5 +1,5 @@
 function [] = boxplot4stages(locs0, locs1, locs2, locs3, locs4, fs)
-%BOXPLOT4STAGES Summary of this function goes here
+% BOXPLOT4STAGES boxplot of the peaks in the for sleep stages
 %   Detailed explanation goes here
     g = [zeros(length(locs0)-1, 1); ones(length(locs1)-1, 1); 2*ones(length(locs2)-1, 1); 3*ones(length(locs3)-1, 1); 4*ones(length(locs4)-1, 1)];
     figure

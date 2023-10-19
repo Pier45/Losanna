@@ -1,15 +1,12 @@
 function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks, max_locs, min_pks, min_locs, fs)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
-    % Create the breth cycle, this vector in the first column has the start
-    % sample when the cycle start, in the second column the end of the
-    % cycle. The lenght of each cycle will be studied and the outliers will
-    % be removed (lenght higher thant the median value over 30 seconds). 
+% FILTER_BREATHING_CYCLES
+% Create the breath cycle, this vector in the first column has the start
+% sample when the cycle start, in the second column the end of the cycle.
+% The length of each cycle will be studied and the outliers will be removed
+% (length higher than the median value over 30 seconds). 
 
     % Before creating the cycles identify the outliers looking at the
-    % ampitude of the signal.
-
+    % amplitude of the signal.
     cycles_max = create_cycles(max_locs);
     cycles_min = create_cycles(min_locs);
     
@@ -27,7 +24,7 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
     cycles_min_cln2 = cycles_min_cln(not(out_len_min), :);
     
 
-    %% Comparison between cycles samples lenght before and after outliers remotion
+    %% Comparison between cycles samples length before and after outliers remotion
     % figure
     % histogram(diff(cycles_min_cln'))
     % hold on

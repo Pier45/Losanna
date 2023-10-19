@@ -1,6 +1,6 @@
 function [cycles_clean2] = clean_breathing_cycles(cycles, locs, outliers_locs, locs_inside, outliers_locs_inside)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% CLEAN_BREATHING_CYCLES identify the breathing cycles with no outliers.
+% Detailed explanation goes here
 
     % Removing the cycles that has as boundary point an outlier
     outliers = locs(outliers_locs);
