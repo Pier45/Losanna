@@ -38,7 +38,7 @@ function [cycles_clean2] = clean_breathing_cycles(cycles, locs, outliers_locs, l
         end
     end
 
-    cycles_clean2 = cycles_clean1(cycles_good2, :);
+    cycles_clean2 = cast(cycles_clean1(cycles_good2, :), 'single');
     %locs_clean2 = locs_clean1(cycles_good2);
 end
 

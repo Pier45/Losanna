@@ -1,4 +1,4 @@
-function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1, fc2, fs, data, name, mode)
+function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1, fc2, fs, data, name, mode, graph)
 % CLEAN_DATA_FIND_PEAKS
 % Input:
 % fc1 = cut off frequency noise remove
@@ -30,23 +30,28 @@ function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1,
         % Searching for minimum values
         [pks_min,locs_min] = findpeaks(-clear_data, 'MinPeakDistance', fs*2, 'MinPeakHeight', -mean(clear_data));
         pks_min = - pks_min;
+        locs_min = cast(locs_min, 'single');
     end
+
+    locs = cast(locs, 'single');
 
     diff_locs = diff(locs);
     mean_hb = fs/mean(diff_locs)*60;
 
-    figure
-    plot(data)
-    hold on
-    plot(f_data, 'r')
-    plot(f_data_low, 'g')
-    plot(clear_data)
-    plot(locs, pks, '*')
-    axis tight
-    if mode == "respiration"
-        plot(locs_min, pks_min, 'r*')
+    if graph == "plot"
+        figure
+        plot(data)
+        hold on
+        plot(f_data, 'r')
+        plot(f_data_low, 'g')
+        plot(clear_data)
+        plot(locs, pks, '*')
+        axis tight
+        if mode == "respiration"
+            plot(locs_min, pks_min, 'r*')
+        end
+        title([name ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_hb,1)) ' bpm'])
     end
-    title([name ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_hb,1)) ' bpm'])
 end
 
 

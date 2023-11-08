@@ -1,4 +1,4 @@
-function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks, max_locs, min_pks, min_locs, fs)
+function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks, max_locs, min_pks, min_locs, fs, graph)
 % FILTER_BREATHING_CYCLES
 % Create the breath cycle, this vector in the first column has the start
 % sample when the cycle start, in the second column the end of the cycle.
@@ -40,21 +40,21 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
     % title('Cycles duration max')
     
     %% Visualization cycles
-    figure
-    plot(data, 'k')
-    hold on
-    scatter(max_locs(out_pks_max), max_pks(out_pks_max), 150, 'o',  'MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5, 'MarkerEdgeAlpha', .5);
-    scatter(min_locs(out_pks_min), min_pks(out_pks_min), 150, 'o',  'MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5, 'MarkerEdgeAlpha', .5);
-    scatter(max_locs, max_pks, 'r+')
-    scatter(min_locs, min_pks, 'b+')
-    axis tight
-
-    xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), FaceColor="b"); 
-    xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), FaceColor="r");
+    if graph == "plot"
+        figure
+        plot(data, 'k')
+        hold on
+        scatter(max_locs(out_pks_max), max_pks(out_pks_max), 150, 'o',  'MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5, 'MarkerEdgeAlpha', .5);
+        scatter(min_locs(out_pks_min), min_pks(out_pks_min), 150, 'o',  'MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5, 'MarkerEdgeAlpha', .5);
+        scatter(max_locs, max_pks, 'r+')
+        scatter(min_locs, min_pks, 'b+')
+        axis tight
+        xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), FaceColor="b"); 
+        xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), FaceColor="r");
+        xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
+        xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
+    end
     
-    xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
-    xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
-
     % Only for the max
     % figure
     % plot(data, 'k')
