@@ -1,14 +1,18 @@
 function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1, fc2, fs, data, name, mode, graph)
 % CLEAN_DATA_FIND_PEAKS
-% Input:
-% fc1 = cut off frequency noise remove
-% fc2 = cut off frequency mean signal identification
-% fs = sampling frequency
-% data = data in columns or row
-% Output
-% pks = amplitude of the peaks
-% locs = x position of the peaks
-% clear_data = filtered and aligned data 
+% INPUT
+% fc1 = cut off frequency.
+% fc2 = cut off frequency mean signal identification.
+% fs = sampling frequency.
+% data = data in columns or row.
+% name = the sleep stage.
+% mode = "cardiac" for the analysis of ECG data, "respiration" for respiration.
+% graph = choose between "plot" to show a graph or "no".
+%
+% OUTPUT
+% pks = amplitude of the peaks.
+% locs = x position of the peaks.
+% clear_data = filtered and aligned data.
 
     [b,a] = butter(2,fc1/(fs/2),'low');
     f_data = filtfilt(b,a,data);
@@ -49,6 +53,9 @@ function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1,
         axis tight
         if mode == "respiration"
             plot(locs_min, pks_min, 'r*')
+            legend("raw data", "fileter raw data (high noise)", "low componet data", "data cleaned and aligned", "resp peaks maz", "resp peaks min")
+        else
+            legend("raw data", "fileter raw data (high noise)", "low componet data", "data cleaned and aligned", "peaks")
         end
         title([name ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_hb,1)) ' bpm'])
     end

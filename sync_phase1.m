@@ -1,6 +1,21 @@
 function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data, T, m, n, fs)
 % SYNC_PHASE1 extract the phase angle of the respiratory signal and possible
 % windows of synchronization
+% INPUT
+% cycles = matrix of 2 columns that contains the starting and ending
+%          point ot the breathing cycles.
+% R_locs = location of the R peaks.
+% data = respiratory signal.
+% T = lenght in seconds of the window.
+% m = number of breathing cycle.
+% n = number of R peaks.
+% fs = sampling frequency. 
+% OUTPUT
+% theta = angle of hilbert trasform in rad.
+% avg_w = mean value of the angle for each respiratory cycle in the window.
+%         (at the moment unused).
+% std_w = std value of the angle for each respiratory cycle in the window.
+% saved_windows = saved windows that respect the selection criteria.
 
     % Each R_peak is associated with a respiratory cycle
     % Rp_res_cycle is a matrix that has the number of respiratory cycles as
@@ -10,9 +25,9 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
     R_res_cycle = nan(size(cycles,1),5);
     for i=1:length(cycles)
         pos_R = 1;
-        if i == 19
-            disp('debug')
-        end
+        % if i == 19
+        %     disp('debug')
+        % end
         
         for j=start:length(R_locs)
             % Select only the R peaks inside a respiratory cycle, in the
@@ -60,14 +75,15 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
     
     saved_windows = cell(size(cycles, 1), 1);
     for k=1:n
-        if k == 3
-            disp('s')
-        end
+        % if k == 3
+        %     disp('s')
+        % end
 
         for c=1:size(R_res_cycle,1)
-            if c == 23
-                disp('debug')
-            end
+            % if c == 23
+            %     disp('debug')
+            % end
+
             % If the two check are respected, identify a window of length T
             if bool_tot(c)
                 begin_W  = find(R_res_cycle(:,k) >= R_res_cycle(c,k), 1, 'first' );

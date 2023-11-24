@@ -49,4 +49,4 @@ m = 1; n = 3;
 
 [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
 
-[perc_sync, good_c] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, fs);
+[perc_sync, good_c] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, 'simulated',fs);

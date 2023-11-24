@@ -1,4 +1,4 @@
-function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, fs)
+function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, sleep_stage, fs)
 % SYNC_PHASE2 Summary of this function goes here
 
 %% Initialization
@@ -27,7 +27,7 @@ function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w
     perc_sync = 100*time_sync/total_time;
     
     if isempty(accepted_cycles)
-        warning("Not found any respiratory cycle sync.")
+        warning(['Not found any respiratory cycle sync in sleep stage ' sleep_stage])
     else
         figure
         plot(theta)
