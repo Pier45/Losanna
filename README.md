@@ -15,11 +15,10 @@ In the test folder there is 'Simulator.m' that allows to create the data to test
 Matlab 2023a
 
 ### Next features
-- [ ]Read only part of the mat file raw_data<
-(Matfile)[https://ch.mathworks.com/help/matlab/ref/matlab.io.matfile.html]
+- [ ] Read only part of the mat file raw_data (Matfile)[https://ch.mathworks.com/help/matlab/ref/matlab.io.matfile.html]
 - [ ] Improve sync algorithm, m different from 1
 - [ ] Check
-- [x]
+- [x] test
 
 ### Info
 Author: Piero Policastro

@@ -1,27 +1,27 @@
 function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, delta, sleep_stage, fs)
-% SYNC_PHASE2 Summary of this function goes here
+% SYNC_PHASE2 compute the percentage of synchronized cycles under the threshold.
 
-%% Initialization
+	%% Threshold formula.
     th = (2*pi*m)/(n*delta);
     
     % Compute the duration in seconds of the breathing cycles, and the total
-    % time of all the selected cycles
+    % time of all the selected cycles.
     duration_cycles = (cycles(:,2)-cycles(:,1))/fs;
     total_time = sum(duration_cycles);
     
-    % Average of the std values computed on windowes on 30 seconds.
+    % Average of the std values computed on windows of 30 seconds.
     avg_std = mean(std_w(:,1:n),2);
-    % Boolean condition to check if the std is under threshold.
+    % Boolean that checks if the std is under threshold.
     bool_std = avg_std < th;
     
-    % Identification of breathing cycles that respect the two condition
+    % Identification of breathing cycles that respect the condition.
     index_cycle_selected = find((bool_std)==1); 
     
     accepted_cycles = unique([saved_windows{index_cycle_selected}]);
     %perc_sync_cycles = 100*length(accepted_cycles)/size(cycles,1);
     
     % Computing the percentage of time in seconds where there is
-    % syncronization (equal to perc_sync_cycles).
+    % synchronization (equal to perc_sync_cycles).
     time_sync = sum(duration_cycles(accepted_cycles));
     perc_sync = 100*time_sync/total_time;
     

@@ -1,17 +1,19 @@
 function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data, T, m, n, fs)
 % SYNC_PHASE1 extract the phase angle of the respiratory signal and possible
-% windows of synchronization
+% windows of synchronization.
+%
 % INPUT
 % cycles = matrix of 2 columns that contains the starting and ending
-%          point ot the breathing cycles.
+%          point of the breathing cycles.
 % R_locs = location of the R peaks.
 % data = respiratory signal.
-% T = lenght in seconds of the window.
+% T = length in seconds of the window.
 % m = number of breathing cycle.
 % n = number of R peaks.
 % fs = sampling frequency. 
+%
 % OUTPUT
-% theta = angle of hilbert trasform in rad.
+% theta = angle of hilbert transform in rad.
 % avg_w = mean value of the angle for each respiratory cycle in the window.
 %         (at the moment unused).
 % std_w = std value of the angle for each respiratory cycle in the window.
@@ -19,8 +21,8 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
 
     % Each R_peak is associated with a respiratory cycle
     % Rp_res_cycle is a matrix that has the number of respiratory cycles as
-    % rows and 5 number of columns (max 5 peaks for a respiration cycles can
-    % be identified).
+    % rows and 5 number of columns. If there are more than 3 R peaks in a 
+	% respiratory cycle, Matlab add a column of zero to add the value.
     start = 1;
     R_res_cycle = zeros(size(cycles,1),5);
     for i=1:length(cycles)
@@ -39,7 +41,7 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
                 if pos_R > 1
                     % Record the last loc for the R peak so next iteration
                     % it will stat from that peak, and not iterate from the
-                    % beginign.
+                    % beginning.
                     start = j;
                     break
                 end
@@ -47,13 +49,13 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
         end
     end
     
-    H_r_data_cln = hilbert(data);
-    theta = angle(H_r_data_cln);
+    H_res_data = hilbert(data);
+    theta = angle(H_res_data);
 
     % figure
     % plot(theta)
     % hold on
-    % plot(zscore(real(H_r_data_cln)))
+    % plot(zscore(real(H_res_data)))
     % plot(R_locs, theta(R_locs), 'o', 'MarkerFaceColor','red')
     % axis tight
 
