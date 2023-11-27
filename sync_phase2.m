@@ -1,8 +1,7 @@
-function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, sleep_stage, fs)
+function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, delta, sleep_stage, fs)
 % SYNC_PHASE2 Summary of this function goes here
 
 %% Initialization
-    delta = 5;
     th = (2*pi*m)/(n*delta);
     
     % Compute the duration in seconds of the breathing cycles, and the total
@@ -11,7 +10,7 @@ function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w
     total_time = sum(duration_cycles);
     
     % Average of the std values computed on windowes on 30 seconds.
-    avg_std = mean(std_w(:,1:3),2);
+    avg_std = mean(std_w(:,1:n),2);
     % Boolean condition to check if the std is under threshold.
     bool_std = avg_std < th;
     
@@ -37,7 +36,7 @@ function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w
         title(['Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
     
         figure
-        bar(1:size(cycles, 1), std_w(:,1:3))
+        bar(1:size(cycles, 1), std_w(:,1:n))
         hold on
         plot(avg_std, '*', 'MarkerSize',10)
         yline(th,'-', 'Threshold for selection')

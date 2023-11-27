@@ -4,7 +4,7 @@ clc
 
 addpath("..")
 
-%% Parameter to set
+%% Parameters to be set
 fs = 1024;
 % One breath each 3 seconds.
 f_resp = 1/3;
@@ -45,8 +45,9 @@ legend('Phase', 'Resp. signal', 'R peaks','Min of cycles')
 axis tight
 
 T = 30;
-m = 1; n = 3;
+m = 1; n = 2;
+delta = 5;
 
 [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
 
-[perc_sync, good_c] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, 'simulated',fs);
+[perc_sync, good_c] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, delta, 'simulated',fs);

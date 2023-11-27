@@ -22,7 +22,7 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
     % rows and 5 number of columns (max 5 peaks for a respiration cycles can
     % be identified).
     start = 1;
-    R_res_cycle = nan(size(cycles,1),5);
+    R_res_cycle = zeros(size(cycles,1),5);
     for i=1:length(cycles)
         pos_R = 1;
         % if i == 19
@@ -70,7 +70,7 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
     end
 
     % 2) Check if there is exactly n R peaks inside m respiratory cycle 
-    bool_one = sum(not(isnan(R_res_cycle)), 2) == n;
+    bool_one = sum(not(R_res_cycle==0), 2) == n;
     bool_tot = bool_one & bool_cons;
     
     saved_windows = cell(size(cycles, 1), 1);
@@ -80,14 +80,14 @@ function [theta, avg_w, std_w, saved_windows] = sync_phase1(cycles, R_locs, data
         % end
 
         for c=1:size(R_res_cycle,1)
-            % if c == 23
+            % if c == 9
             %     disp('debug')
             % end
 
             % If the two check are respected, identify a window of length T
             if bool_tot(c)
                 begin_W  = find(R_res_cycle(:,k) >= R_res_cycle(c,k), 1, 'first' );
-                close_W = find(R_res_cycle(:,k) < R_res_cycle(c,k)+T, 1, 'last'); % Bug che si risolve fuori  da solo ma da rivedere caso in cui c'è un nan per una colonna e altri no
+                close_W = find(R_res_cycle(:,k) < R_res_cycle(c,k)+T & R_res_cycle(:,k)~= 0, 1, 'last');
                 window = begin_W:close_W;
                 
                 % Check if inside the selected windows all R peaks respect

@@ -1,6 +1,6 @@
-% clear
-% close all
-% clc
+clear
+close all
+clc
 
 % load('/mnt/HDD2/CardioAudio_sleepbiotech/data/awake/s21/process/raw_data.mat')
 
@@ -19,6 +19,7 @@ d(rm_index) = [];
 
 for k = 1:length(d)
     sel_path = [d(k).folder '/' d(k).name '/raw_data.mat'];
+	% Test the loading of restricted part of the mat file
     load(sel_path)
     status = mkdir(d(k).name);
     % Do processing
