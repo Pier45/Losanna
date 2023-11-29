@@ -19,8 +19,10 @@ d(rm_index) = [];
 
 for k = 1:length(d)
     sel_path = [d(k).folder '/' d(k).name '/raw_data.mat'];
-	% Test the loading of restricted part of the mat file
-    load(sel_path)
+	% Load restricted part of the mat file
+    m = matfile(sel_path);
+    
+    % Create a folder for the subject
     status = mkdir(d(k).name);
     % Do processing
     

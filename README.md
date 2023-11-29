@@ -15,10 +15,11 @@ In the test folder there is 'Simulator.m' that allows to create the data to test
 Matlab 2023a
 
 ### Next features
-- [ ] Read only part of the mat file raw_data (Matfile)[https://ch.mathworks.com/help/matlab/ref/matlab.io.matfile.html]
+- :white_check_mark: Read only part of the mat file raw_data [matfile function](https://ch.mathworks.com/help/matlab/ref/matlab.io.matfile.html) [large mat files](https://ch.mathworks.com/help/matlab/large-mat-files.html)
+> The file on the server are larger than 2Gb so are automatically saved in v7.3 format, the partial loading is possible.
 - [ ] Improve sync algorithm, m different from 1
-- [ ] Check
-- [x] test
+- [ ] Implement the functions in Start_analysis_server
+- [ ] Test the algorithm with Matlab 2019a
 
 ### Info
 Author: Piero Policastro

@@ -56,7 +56,7 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
         xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), FaceColor="r");
         xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
         xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
-        disp([' - Perc removed from max: ' num2str(perc_remotion_max) '% - Perc removed form min: ' num2str(perc_remotion_min) '%'])
+        title([' - Perc removed from max: ' num2str(perc_remotion_max) '% - Perc removed form min: ' num2str(perc_remotion_min) '%'])
     end
     
     % Only for the max

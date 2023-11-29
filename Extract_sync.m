@@ -3,6 +3,7 @@ close all
 clear
 
 load("info_s21.mat")
+
 fs = 1024;
 T = 30;
 m = 1; n = 3;
