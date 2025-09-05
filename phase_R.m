@@ -34,6 +34,8 @@ function [theta_R] = phase_R(r_cycles_cln, r_data_cln, c_locs, k, graph)
         hold on
         plot(zscore(r_data_cln))
         hold off
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
     end
 
     %% 3D plot test

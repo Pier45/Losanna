@@ -11,8 +11,8 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
     cycles_max = create_cycles(max_locs);
     cycles_min = create_cycles(min_locs);
     
-    [~, out_pks_max] = rmoutliers(max_pks, 'movmedian', fs*window_time);
-    [~, out_pks_min] = rmoutliers(min_pks, 'movmedian', fs*window_time);
+    [~, out_pks_max] = rmoutliers(max_pks, 'movmean', fs*window_time); %TO CHECK
+    [~, out_pks_min] = rmoutliers(min_pks, 'movmean', fs*window_time); %TO CHECK
     
     [cycles_max_cln] = clean_breathing_cycles(cycles_max, max_locs, out_pks_max, min_locs, out_pks_min);
     [cycles_min_cln] = clean_breathing_cycles(cycles_min, min_locs, out_pks_min, max_locs, out_pks_max);
@@ -57,6 +57,8 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
         xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
         xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
         title([' - Perc removed from max: ' num2str(perc_remotion_max) '% - Perc removed form min: ' num2str(perc_remotion_min) '%'])
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
     end
     
     % Only for the max

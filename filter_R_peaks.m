@@ -41,6 +41,8 @@ function [c_pks_cln, c_locs_cln] = filter_R_peaks(c_pks, c_locs, RR_window_pks, 
         axis tight
         p = round(sum(out_len_unilenght | out_pks)/ length(c_pks)*100, 1);
         title(['Percentage of outlier: ' num2str(p) '%'])
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
     end
 end
 

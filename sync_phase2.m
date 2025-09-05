@@ -1,13 +1,10 @@
-function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w, std_w, saved_windows, m, n, delta, sleep_stage, fs)
+function [perc_sync, accepted_cycles] = sync_phase2(new_cycles, theta, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, fs)
 % SYNC_PHASE2 compute the percentage of synchronized cycles under the threshold.
-
-	%% Threshold formula.
+	
+    %% Threshold formula.
     th = (2*pi*m)/(n*delta);
     
-    % Compute the duration in seconds of the breathing cycles, and the total
-    % time of all the selected cycles.
-    duration_cycles = (cycles(:,2)-cycles(:,1))/fs;
-    total_time = sum(duration_cycles);
+    total_time = length(theta)/fs;
     
     % Average of the std values computed on windows of 30 seconds.
     avg_std = mean(std_w(:,1:n),2);
@@ -22,26 +19,35 @@ function [perc_sync, accepted_cycles] = sync_phase2(cycles, theta, R_locs, avg_w
     
     % Computing the percentage of time in seconds where there is
     % synchronization (equal to perc_sync_cycles).
-    time_sync = sum(duration_cycles(accepted_cycles));
+    duration_cycles = (new_cycles(accepted_cycles,2)-new_cycles(accepted_cycles,1))/fs;
+
+    time_sync = sum(duration_cycles);
     perc_sync = 100*time_sync/total_time;
     
     if isempty(accepted_cycles)
-        warning(['Not found any respiratory cycle sync in sleep stage ' sleep_stage])
+        warning([sleep_stage ' - Not found any locking cycle'])
     else
         figure
         plot(theta)
         hold on
         plot(R_locs, theta(R_locs), 'o', 'MarkerFaceColor','red')
-        xregion(cycles(accepted_cycles,1), cycles(accepted_cycles,2), FaceColor="b")
-        title(['Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
-    
+        % xregion(cycles(accepted_cycles,1), cycles(accepted_cycles,2), FaceColor="b")
+        xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), FaceColor="b")
+        title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
+
         figure
-        bar(1:size(cycles, 1), std_w(:,1:n))
+        bar(std_w)
+        string_vector = arrayfun(@num2str, 1:n, 'UniformOutput', false);
         hold on
-        plot(avg_std, '*', 'MarkerSize',10)
+        plot(avg_std, '*', 'MarkerSize',15)
         yline(th,'-', 'Threshold for selection')
         xline(index_cycle_selected, '-', num2cell(index_cycle_selected))
-        legend('std angle 1', 'std angle 2', 'std angle 3', 'mean std for cycle', 'Location','bestoutside')
+        title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+        legend(string_vector{:}, 'mean std for cycle')
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
     end
 end
 

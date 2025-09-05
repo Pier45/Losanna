@@ -31,4 +31,9 @@ for k = 1:length(d)
 end
 
 %% Extract sound locs and conditions start/stop
-[cond] = extract_sound_info(y);
+m = matfile('/mnt/HDD2/CardioAudio_sleepbiotech/data/awake/s21/process/raw_data.mat');
+sound = m.y(69,:);
+ecg = m.y(65,:);
+respiration = m.y(68,:);
+
+[cond] = extract_sound_info(sound);

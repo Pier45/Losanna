@@ -7,7 +7,8 @@ clc
 % data(1,:) -> Raw ECG
 % data(2,:) -> Raw breathing
 % data(3,:) -> 0 = Awake; 1 = N1; 2 = N2; 3 = N3; 4 = REM; 6 = Arousal
-path = 'C:\Users\piero\Desktop\Losanna\Data\Cardio_resp\s21_sleep_cardioresp.mat';
+path = 'C:\Users\piero\OneDrive\Dottorato\Travels\Losanna\Data\Cardio_resp\s21_sleep_cardioresp.mat';
+
 load(path)
 fs = 1024;
 % Change the number of row in the next variable, if the row are different
@@ -104,6 +105,7 @@ raw_data.n4.perc = sum(raw_data.n4.logic_selection)/sum(data(row_SLEEP,:)~=0)*10
 [res.n3.cycles_max, res.n3.cycles_min] = filter_breathing_cycles(res.n3.data_cln, res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, fs, "plot");
 [res.n4.cycles_max, res.n4.cycles_min] = filter_breathing_cycles(res.n4.data_cln, res.n4.max_pks, res.n4.max_locs, res.n4.min_pks, res.n4.min_locs, fs, "no");
 
+%% Plot in polar coordianates the the R peaks signals in a respiratory cycle. 
 f0 = phase_R(res.n0.cycles_min, res.n0.data_cln, car.n0.locs, 0, "no");
 f1 = phase_R(res.n1.cycles_min, res.n1.data_cln, car.n1.locs, 0, "no");
 f2 = phase_R(res.n2.cycles_min, res.n2.data_cln, car.n2.locs, 0, "no");
@@ -115,4 +117,4 @@ polar_hist_stages(f0,f1,f2,f3,f4, 60);
 %% Save res and car structures in a mat file
 sl_pos = strfind(path, '\');
 name = path(sl_pos(end)+1: end);
-save(['info_' name(1:min(strfind(name, '_'))-1) '.mat'], 'res', 'car')
+save(['output/card_resp/info_' name(1:min(strfind(name, '_'))-1) '.mat'], 'res', 'car')
