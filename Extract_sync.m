@@ -2,7 +2,9 @@ clc
 close all
 clear
 
-load("output\card_resp\info_s23.mat")
+name_path = "output\card_resp\info_s21.mat";
+match = char(regexp(name_path, '_s\w+', 'match'));
+load(name_path)
 
 fs = 1024;
 T = 30;
@@ -18,12 +20,35 @@ for i = 1:length(sleep_stages)
     R_locs = car.(sleep_stages{i}).locs;
     data = res.(sleep_stages{i}).data_cln;
 
-    [theta, R_res_cycle, avg_w, std_w, saved_windows, new_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
-    [result(i).perc_sync, good_cycle]= sync_phase2(new_cycle, theta, R_locs, std_w, saved_windows, m, n, delta, sleep_stages_names{i}, fs);
+    [phase, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
+    [perc_sync, sync_cycle]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages_names{i}, fs);
+    
+    %% Save sleep stage data output
+    result.sleep_stages.(sleep_stages_names{i}).sync_perc = perc_sync;
+    result.sleep_stages.(sleep_stages_names{i}).sync_cycle = sync_cycle; 
+    result.sleep_stages.(sleep_stages_names{i}).m_cycle = m_cycle;
+    result.sleep_stages.(sleep_stages_names{i}).cycle = cycles;
+
+    %% Save the signals ECG and respiratory
+    result.sleep_stages.(sleep_stages_names{i}).phase = phase;
+    result.sleep_stages.(sleep_stages_names{i}).R_locs = R_locs;
+    
+    %% Save the setted parameters
+    result.parameters.m = m;
+    result.parameters.n = n;
+    result.parameters.T = T;
+    result.parameters.delta = delta;
+end
+
+perc_sync_all = zeros(1, size(sleep_stages_names, 2));
+for i = 1:length(sleep_stages_names)
+    perc_sync_all(i) = result.sleep_stages.(sleep_stages_names{i}).sync_perc;
 end
 
 figure
-bar(categorical(sleep_stages_names), [result.perc_sync])
+bar(categorical(sleep_stages_names), perc_sync_all)
 ylabel('sync %')
 ylim([0, 30])
-title('Subject 21')
+title(['Subject ' match(3:end)])
+ax = gca; % Get current axes
+ax.FontSize = 14;

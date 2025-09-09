@@ -1,5 +1,5 @@
 function [cond] = extract_sound_info(y)
-%EXTRACT_SOUND_INFO Summary of this function goes here
+%EXTRACT_SOUND_INFO
     cond = struct();
 
     [~, cond.sound_locs] = find(or(y(69,:)==16, y(69,:)==32));
