@@ -52,4 +52,3 @@ ylim([0, 30])
 title(['Subject ' match(3:end)])
 ax = gca; % Get current axes
 ax.FontSize = 14;
-
