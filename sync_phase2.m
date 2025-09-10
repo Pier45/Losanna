@@ -32,7 +32,8 @@ function [perc_sync, accepted_cycles] = sync_phase2(new_cycles, theta, R_locs, s
         hold on
         plot(R_locs, theta(R_locs), 'o', 'MarkerFaceColor','red')
         % xregion(cycles(accepted_cycles,1), cycles(accepted_cycles,2), FaceColor="b")
-        xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), FaceColor="b")
+        % xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), FaceColor="b")
+        draw_xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), ylim, 'b', 0.2);
         title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
@@ -43,7 +44,11 @@ function [perc_sync, accepted_cycles] = sync_phase2(new_cycles, theta, R_locs, s
         hold on
         plot(avg_std, '*', 'MarkerSize',15)
         yline(th,'-', 'Threshold for selection')
-        xline(index_cycle_selected, '-', num2cell(index_cycle_selected))
+        % Not compatible with Matlab 2019a
+        % xline(index_cycle_selected, '-', num2cell(index_cycle_selected))
+        for i = 1:length(index_cycle_selected)
+            xline(index_cycle_selected(i), '-', num2str(index_cycle_selected(i)));
+        end
         title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
         legend(string_vector{:}, 'mean std for cycle')
         ax = gca; % Get current axes

@@ -52,10 +52,18 @@ function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks
         scatter(max_locs, max_pks, 'r+')
         scatter(min_locs, min_pks, 'b+')
         axis tight
-        xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), FaceColor="b"); 
-        xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), FaceColor="r");
-        xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
-        xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
+        draw_xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), ylim, 'b', 0.2);
+        draw_xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), ylim, 'r', 0.2);
+        draw_xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2), ylim, [0.5 0.5 0.5], 0.2);
+        draw_xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2), ylim, [0.5 0.5 0.5], 0.2);
+        
+        %% Sezione compatibile solo con 2025a
+        %         xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), FaceColor="b"); 
+        %         xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), FaceColor="r");
+        %         xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2))
+        %         xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
+        %%
+        
         title([' - Perc removed from max: ' num2str(perc_remotion_max) '% - Perc removed form min: ' num2str(perc_remotion_min) '%'])
         ax = gca; % Get current axes
         ax.FontSize = 14;

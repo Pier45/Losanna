@@ -106,11 +106,11 @@ raw_data.n4.perc = sum(raw_data.n4.logic_selection)/sum(data(row_SLEEP,:)~=0)*10
 [res.n4.cycles_max, res.n4.cycles_min] = filter_breathing_cycles(res.n4.data_cln, res.n4.max_pks, res.n4.max_locs, res.n4.min_pks, res.n4.min_locs, fs, "no");
 
 %% Plot in polar coordianates the the R peaks signals in a respiratory cycle. 
-f0 = phase_R(res.n0.cycles_min, res.n0.data_cln, car.n0.locs, 0, "no");
-f1 = phase_R(res.n1.cycles_min, res.n1.data_cln, car.n1.locs, 0, "no");
-f2 = phase_R(res.n2.cycles_min, res.n2.data_cln, car.n2.locs, 0, "no");
-f3 = phase_R(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0, "plot");
-f4 = phase_R(res.n4.cycles_min, res.n4.data_cln, car.n4.locs, 0, "no");
+f0 = phase_R(res.n0.cycles_min, res.n0.data_cln, car.n0.locs, 0,'N0',"no");
+f1 = phase_R(res.n1.cycles_min, res.n1.data_cln, car.n1.locs, 0,'N1', "no");
+f2 = phase_R(res.n2.cycles_min, res.n2.data_cln, car.n2.locs, 0,'N2', "no");
+f3 = phase_R(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0,'N3', "plot");
+f4 = phase_R(res.n4.cycles_min, res.n4.data_cln, car.n4.locs, 0,'N4', "no");
 
 polar_hist_stages(f0,f1,f2,f3,f4, 60);
 
