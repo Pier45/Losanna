@@ -1,4 +1,4 @@
-function [theta_R] = phase_R(r_cycles_cln, r_data_cln, c_locs, k, graph)
+function [theta_R] = phase_R(r_cycles_cln, r_data_cln, c_locs, k, stage, graph)
 % PHASE_SYNC_PLOT function to plot in polar coordinates the phase of the R
 % peaks signals in a respiratory cycle. 
 % INPUT
@@ -27,15 +27,16 @@ function [theta_R] = phase_R(r_cycles_cln, r_data_cln, c_locs, k, graph)
         %% Figure for single plot
         figure
         polarhistogram(theta_R, 60, 'EdgeAlpha',0.2);
-        title("Phase of the respiratory signal in the R-peaks instant")
-
-        figure
-        plot(theta)
-        hold on
-        plot(zscore(r_data_cln))
-        hold off
+        title([stage '  -  Phase of the respiratory signal in the R-peaks instant'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
+        
+%         figure
+%         plot(theta)
+%         hold on
+%         plot(zscore(r_data_cln))
+%         hold off
+
     end
 
     %% 3D plot test
