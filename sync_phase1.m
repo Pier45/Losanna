@@ -1,4 +1,4 @@
-function [theta, R_res_cycle, avg_w, std_w, saved_windows, new_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs)
+function [theta, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs)
 % SYNC_PHASE1 extract the phase angle of the respiratory signal and possible
 % windows of synchronization.
 %
@@ -85,9 +85,10 @@ function [theta, R_res_cycle, avg_w, std_w, saved_windows, new_cycle] = sync_pha
     std_w = nan(n_row, n);
         
     %% 1) Check if all the respiratory cycles are consecutive
-    new_cycle = zeros(n_row, 2);
-    new_cycle(:, 1) = cycles(1:m:end, 1);
-    new_cycle(:, 2) = cycles(m:m:end, 2);
+    m_cycle = zeros(n_row, 2);
+    m_cycle(:, 1) = cycles(1:m:end, 1);
+    m_cycle(:, 2) = cycles(m:m:end, 2);
+    m_cycle = single(m_cycle);
     bool_cons = true(length(cycles) - mod(length(cycles), m),1);
     for g=2:length(cycles)
         if cycles(g,1) ~= cycles(g-1,2)
@@ -121,7 +122,7 @@ function [theta, R_res_cycle, avg_w, std_w, saved_windows, new_cycle] = sync_pha
             if bool_tot(c)
                 begin_W  = find(R_res_cycle(:,k) >= R_res_cycle(c,k), 1, 'first' );
                 close_W = find(R_res_cycle(:,k) < R_res_cycle(c,k)+T*fs & R_res_cycle(:,k)~= 0, 1, 'last');
-                th_len_W = (new_cycle(close_W,2)-new_cycle(begin_W,1)) >= T*fs;
+                th_len_W = (m_cycle(close_W,2)-m_cycle(begin_W,1)) >= T*fs;
                 window = begin_W:close_W;
                 
                 % Check if inside the selected windows all R peaks respect
