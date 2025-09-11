@@ -31,9 +31,12 @@ function [perc_sync, accepted_cycles] = sync_phase2(new_cycles, theta, R_locs, s
         plot(theta)
         hold on
         plot(R_locs, theta(R_locs), 'o', 'MarkerFaceColor','red')
-        % xregion(cycles(accepted_cycles,1), cycles(accepted_cycles,2), FaceColor="b")
+        % Not compatible with Matlab 2019a
         % xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), FaceColor="b")
-        draw_xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), ylim, 'b', 0.2);
+        draw_xregion(new_cycles(accepted_cycles,1), new_cycles(accepted_cycles,2), ylim, 'b', 0.3);
+        for i = 1:length(index_cycle_selected)
+            xline(new_cycles(index_cycle_selected(i),1), '-', num2str(index_cycle_selected(i)));
+        end
         title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
