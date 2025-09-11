@@ -1,3 +1,38 @@
+% Script Name: Start_analyis_server 
+%
+% Description:
+%   Analyzes nighttime raw data to detect and extract synchrony events, 
+%   revealing temporal patterns of coordinated activity.
+%
+% Author:
+%   Piero Policastro
+%   Email: piero.policastro@gmail.com
+%
+% Created: [Insert Date, e.g., 2025-09-11]
+%
+% License:
+%   MIT License
+%   Copyright (c) 2025 Piero Policastro
+%
+%   Permission is hereby granted, free of charge, to any person obtaining a 
+%   copy of this software and associated documentation files (the "Software"), 
+%   to deal in the Software without restriction, including without limitation 
+%   the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+%   and/or sell copies of the Software, and to permit persons to whom the 
+%   Software is furnished to do so, subject to the following conditions:
+%
+%   The above copyright notice and this permission notice shall be included 
+%   in all copies or substantial portions of the Software.
+%
+%   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+%   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+%   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+%   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+%   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+%   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+%   DEALINGS IN THE SOFTWARE.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 clear
 close all
 clc
@@ -24,7 +59,8 @@ for k = 1:length(d)
         night = ['n' num2str(j)];
         % Create a folder for the subject
         status = mkdir(['output/' d(k).name '/' night]);
-    
+        save_path = ['output/' d(k).name '/' night '/'];
+        
         % Load restricted part of the mat file
         sel_path = [d(k).folder '/' d(k).name '/' night '/process/'];
         raw_data_path = [sel_path 'raw_data.mat'];
@@ -34,7 +70,7 @@ for k = 1:length(d)
         respiration = mfile.y(68,:);
         
         % Extraction of sound event
-        [cond] = extract_sound_info(sound);
+        [sound_events] = extract_sound_info(sound);
 
         % Load the sleep stages
         files = dir(fullfile(sel_path, '*.mat')); % Or '*.txt', etc.
@@ -102,7 +138,7 @@ for k = 1:length(d)
         f3 = phase_R(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0, 'N3',"plot");
         f4 = phase_R(res.n4.cycles_min, res.n4.data_cln, car.n4.locs, 0, 'N4',"no");
         
-        polar_hist_stages(f0,f1,f2,f3,f4, 60);
+        polar_hist_stages(f0,f1,f2,f3,f4, 60, true, save_path);
         sleep_stages = fieldnames(res(1));
 
         %% Extract sync data
@@ -124,16 +160,37 @@ for k = 1:length(d)
             %% Save the signals ECG and respiratory
             result.sleep_stages.(sleep_stages_names{i}).phase = phase;
             result.sleep_stages.(sleep_stages_names{i}).R_locs = R_locs;
-            
-            %% Save the setted parameters
-            result.parameters.m = m;
-            result.parameters.n = n;
-            result.parameters.T = T;
-            result.parameters.delta = delta;
         end
+        
+        %% Save the syncro parameters
+        result.parameters.m = m;
+        result.parameters.n = n;
+        result.parameters.T = T;
+        result.parameters.delta = delta;
+        
+        %% Save the sound events data
+        result.sound_events = sound_events;
+        
+        %% Save general details
+        result.details.night = night;
+        result.details.path = sel_path;
+        result.details.id = d(k).name;
+        
+        %% Percentage of sync
+        perc_sync_all = zeros(1, size(sleep_stages_names, 2));
+        for i = 1:length(sleep_stages_names)
+            perc_sync_all(i) = result.sleep_stages.(sleep_stages_names{i}).sync_perc;
+        end
+        
+        fig2 = figure;
+        bar(categorical(sleep_stages_names), perc_sync_all, 'FaceColor', [0.2 0.8 0.8], 'EdgeColor', 'w')
+        ylabel('breathing cycles sync %')
+        ylim([0, 30])
+        title(['Subject ' result.details.id ' - ' result.details.night])
+        print(fig2, [save_path 'perc_sync_bar.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
 
         %% Save
-        save(['output/' d(k).name '/' night '/result.mat'], 'result');
+        save([save_path 'result.mat'], 'result');
  
     end
 end

@@ -5,3 +5,5 @@
 *.avi
 *.mp4
 *.m~
+/output/*
+!/output/
