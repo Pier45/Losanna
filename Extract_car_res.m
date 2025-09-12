@@ -68,19 +68,19 @@ raw_data.n4.perc = sum(raw_data.n4.logic_selection)/sum(data(row_SLEEP,:)~=0)*10
 % plot(data(2,raw_data.n4.logic_selection)); title(['N4 - percentage of time in stage ' num2str(round(raw_data.n4.perc,1)) '%']); axis tight
 
 %% Denoising of the ECG and identification of R peaks
-[c_pks0, c_locs0, ~, ~, car.n0.data_cln] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n0.idx), 'Awake N0', "cardiac", "no");
-[c_pks1, c_locs1, ~, ~, car.n1.data_cln] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n1.idx), 'N1', "cardiac", "no");
-[c_pks2, c_locs2, ~, ~, car.n2.data_cln] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n2.idx), 'N2', "cardiac", "no");
-[c_pks3, c_locs3, ~, ~, car.n3.data_cln] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n3.idx), 'N3', "cardiac", "plot");
-[c_pks4, c_locs4, ~, ~, car.n4.data_cln] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n4.idx), 'N4', "cardiac", "no");
+[c_pks0, c_locs0, ~, ~, car.n0.data_cln, car.n0.mean_bpm] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n0.idx), 'Awake N0', "cardiac", "no");
+[c_pks1, c_locs1, ~, ~, car.n1.data_cln, car.n1.mean_bpm] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n1.idx), 'N1', "cardiac", "no");
+[c_pks2, c_locs2, ~, ~, car.n2.data_cln, car.n2.mean_bpm] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n2.idx), 'N2', "cardiac", "no");
+[c_pks3, c_locs3, ~, ~, car.n3.data_cln, car.n3.mean_bpm] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n3.idx), 'N3', "cardiac", "plot");
+[c_pks4, c_locs4, ~, ~, car.n4.data_cln, car.n4.mean_bpm] = clean_data_find_peaks(20, 0.5, fs, data(row_ECG, raw_data.n4.idx), 'N4', "cardiac", "no");
 % boxplot4stages(c_locs0, c_locs1, c_locs2, c_locs3, c_locs4, fs)
 
 %% Cleaning of R peaks from outliers
-[car.n0.pks, car.n0.locs] = filter_R_peaks(c_pks0, c_locs0, 30, 10, car.n0.data_cln, "no");
-[car.n1.pks, car.n1.locs] = filter_R_peaks(c_pks1, c_locs1, 30, 10, car.n1.data_cln, "no");
-[car.n2.pks, car.n2.locs] = filter_R_peaks(c_pks2, c_locs2, 20, 10, car.n2.data_cln, "no");
-[car.n3.pks, car.n3.locs] = filter_R_peaks(c_pks3, c_locs3, 30, 10, car.n3.data_cln, "plot");
-[car.n4.pks, car.n4.locs] = filter_R_peaks(c_pks4, c_locs4, 30, 10, car.n4.data_cln, "no");
+[car.n0.pks, car.n0.locs, car.n0.p_out] = filter_R_peaks(c_pks0, c_locs0, 30, 10, car.n0.data_cln, "no");
+[car.n1.pks, car.n1.locs, car.n1.p_out] = filter_R_peaks(c_pks1, c_locs1, 30, 10, car.n1.data_cln, "no");
+[car.n2.pks, car.n2.locs, car.n2.p_out] = filter_R_peaks(c_pks2, c_locs2, 20, 10, car.n2.data_cln, "no");
+[car.n3.pks, car.n3.locs, car.n3.p_out] = filter_R_peaks(c_pks3, c_locs3, 30, 10, car.n3.data_cln, "plot");
+[car.n4.pks, car.n4.locs, car.n4.p_out] = filter_R_peaks(c_pks4, c_locs4, 30, 10, car.n4.data_cln, "no");
 
 %% Need some changes
 % Now compute the cycles between the peaks not considering the outliers.

@@ -1,4 +1,4 @@
-function [c_pks_cln, c_locs_cln] = filter_R_peaks(c_pks, c_locs, RR_window_pks, RR_window_len, data, graph)
+function [c_pks_cln, c_locs_cln, p_out] = filter_R_peaks(c_pks, c_locs, RR_window_pks, RR_window_len, data, graph)
 % FILTER_R_PEAKS 
 % Identification of R peaks that are outliers. The identification criteria
 % are:
@@ -18,6 +18,7 @@ function [c_pks_cln, c_locs_cln] = filter_R_peaks(c_pks, c_locs, RR_window_pks, 
 % OUTPUT
 % c_pks_cln = Amplitude of the selected peaks.
 % c_locs_cln = Location in samples) of the selected peaks.
+% p_out = percentage outlires of R peaks.
 
 
     [~, out_pks] = rmoutliers(c_pks, 'movmedian', RR_window_pks);
@@ -30,6 +31,8 @@ function [c_pks_cln, c_locs_cln] = filter_R_peaks(c_pks, c_locs, RR_window_pks, 
     c_pks_cln = c_pks(not(out_pks) & not(out_len_unilenght));
     c_locs_cln = cast(c_locs(not(out_pks) & not(out_len_unilenght)), 'single');
     
+    p_out = round(sum(out_len_unilenght | out_pks)/ length(c_pks)*100, 1);
+
     if graph == "plot"
         figure
         plot(data, 'k')
@@ -39,8 +42,7 @@ function [c_pks_cln, c_locs_cln] = filter_R_peaks(c_pks, c_locs, RR_window_pks, 
         plot(c_locs(out_len_unilenght), c_pks(out_len_unilenght),'bo','MarkerSize',10)
         legend('ECG', ['raw peaks ' num2str(length(c_pks))], ['amp outlier ' num2str(sum(out_pks))], ['time outlier ' num2str(sum(out_len))])
         axis tight
-        p = round(sum(out_len_unilenght | out_pks)/ length(c_pks)*100, 1);
-        title(['Percentage of outlier: ' num2str(p) '%'])
+        title(['Percentage of outlier: ' num2str(p_out) '%'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
     end

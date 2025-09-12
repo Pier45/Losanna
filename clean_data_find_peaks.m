@@ -1,4 +1,4 @@
-function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1, fc2, fs, data, name, mode, graph)
+function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_peaks(fc1, fc2, fs, data, name, mode, graph)
 % CLEAN_DATA_FIND_PEAKS
 % INPUT
 % fc1 = cut off frequency.
@@ -13,6 +13,7 @@ function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1,
 % pks = amplitude of the peaks.
 % locs = x position of the peaks.
 % clear_data = filtered and aligned data.
+% mean_bpm = mean heart beat
 
     [b,a] = butter(3,fc1/(fs/2),'low');% initial order 2
     f_data = filtfilt(b,a,data);
@@ -40,7 +41,7 @@ function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1,
     locs = cast(locs, 'single');
 
     diff_locs = diff(locs);
-    mean_hb = fs/mean(diff_locs)*60;
+    mean_bpm = fs/mean(diff_locs)*60;
 
     if graph == "plot"
         figure
@@ -57,7 +58,7 @@ function [pks, locs, pks_min, locs_min, clear_data] = clean_data_find_peaks(fc1,
         else
             legend("raw data", "fileter raw data (high noise)", "low componet data", "data cleaned and aligned", "peaks")
         end
-        title([name ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_hb,1)) ' bpm'])
+        title([name ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_bpm,1)) ' bpm'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
     end
