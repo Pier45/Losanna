@@ -47,17 +47,24 @@ T = 30;
 delta = 5;
 
 combinations = {'m1n3', 'm1n4','m2n5','m2n7'};
-
 sleep_stages = {'Awake', 'n1', 'n2', 'n3', 'REM'};
 
-for k = 1:length(d)
+%% Until the s31 complete the second night acquisition
+d(strcmp({d.name}, 's31')) = [];
+%%
+
+parfor k = 1:length(d)
+    
+    if k==3
+        disp('test')
+    end
     
     raw_data = struct();
     res = struct();
     car = struct();
     sub_name = d(k).name;
     
-    parfor j = 1:2
+    for j = 1:2
         night = ['n' num2str(j)];
         % Create a folder for the subject
         status = mkdir(['output/'  sub_name '/' night]);
@@ -166,7 +173,7 @@ for k = 1:length(d)
                 [perc_sync, sync_cycle]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages{i}, fs, false);
                 sound_event_table = sync_phase3(R_locs, phase, m_cycle, sync_cycle, sleep_stages{i}, sound_events);
 
-
+                
                 %% Save sleep stage data output
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_perc = perc_sync;
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_cycle = sync_cycle; 
@@ -174,12 +181,14 @@ for k = 1:length(d)
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).cycle = cycles;
 
                 %% Save the signals ECG and respiratory
-                result.(combinations{c}).sleep_stages.(sleep_stages{i}).phase = phase;
-                result.(combinations{c}).sleep_stages.(sleep_stages{i}).R_locs = R_locs;
-                result.(combinations{c}).sleep_stages.(sleep_stages{i}).h_bmp = car.(sleep_stages{i}).mean_bpm;
-                result.(combinations{c}).sleep_stages.(sleep_stages{i}).r_bmp = res.(sleep_stages{i}).mean_bpm;
-                result.(combinations{c}).sleep_stages.(sleep_stages{i}).perc = raw_data.(sleep_stages{i}).perc;
-
+                if c == 1
+                    result.sleep_data.(sleep_stages{i}).phase = phase;
+                    result.sleep_data.(sleep_stages{i}).R_locs = R_locs;
+                    result.sleep_data.(sleep_stages{i}).h_bmp = car.(sleep_stages{i}).mean_bpm;
+                    result.sleep_data.(sleep_stages{i}).r_bmp = res.(sleep_stages{i}).mean_bpm;
+                    result.sleep_data.(sleep_stages{i}).perc = raw_data.(sleep_stages{i}).perc;
+                end
+                
                 %% Save sound events results
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sound_table = sound_event_table;
 
@@ -222,6 +231,6 @@ for k = 1:length(d)
     end
 end
 
-function parsave(filename, var)
-    save(filename, 'var');
+function parsave(filename, result)
+    save(filename, 'result');
 end
