@@ -29,4 +29,34 @@ function [sound_events] = extract_sound_info(sound)
     sound_events.baseline.start=find(sound==192);
     % baseline_stop
     sound_events.baseline.stop=find(sound==208);
+    
+    %% Retrive the fieldnames of the sound events
+    sound_cond = fieldnames(rmfield(sound_events, 'sound_locs'));
+    
+    %% Create a vector for each condition
+    sound_events.vector = zeros(length(sound), 1);
+    for s=1:size(sound_cond)
+        for r=1:size(sound_events.(sound_cond{s}).start,2)
+            if convertCharsToStrings(sound_cond{s}) == "sync"
+                sasa = 96;
+            elseif convertCharsToStrings(sound_cond{s}) == "async"
+                sasa = 160;
+            elseif convertCharsToStrings(sound_cond{s}) == "isoch"
+                sasa = 128;
+            elseif convertCharsToStrings(sound_cond{s}) == "baseline"
+                sasa = 192;
+            end
+            sound_events.vector(sound_events.(sound_cond{s}).start(r):sound_events.(sound_cond{s}).stop(r)) = sasa;
+        end
+    end
+    
+%     figure, 
+%     plot(sound_events.vector)
+%     hold on
+%     yline(192, '-','baseline')
+%     yline(128, '-','isoc')
+%     yline(160, '-','async')
+%     yline(96, '-','sync')
+    
+
 end
