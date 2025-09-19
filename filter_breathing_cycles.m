@@ -1,4 +1,4 @@
-function [cycles_max_cln,cycles_min_cln] = filter_breathing_cycles(data, max_pks, max_locs, min_pks, min_locs, fs, graph)
+function [cycles_max_cln,cycles_min_cln, perc_remotion_min] = filter_breathing_cycles(data, max_pks, max_locs, min_pks, min_locs, fs, graph)
 % FILTER_BREATHING_CYCLES
 % The purpose of this function is to discover the breathing cycles. In this matrix the start
 % of the cycle is in the first column and the end of the cycle is in the second column.

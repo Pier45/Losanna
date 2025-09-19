@@ -24,40 +24,36 @@ function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, sa
     time_sync = sum(duration_cycles);
     perc_sync = 100*time_sync/total_time;
     
-    if isempty(sync_cycle)
-        warning([sleep_stage ' - Not found any locking cycle'])
-    else
-        if graph
-            figure
-            plot(phase)
-            hold on
-            plot(R_locs, phase(R_locs), 'o', 'MarkerFaceColor','red')
-            % Not compatible with Matlab 2019a
-            % xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), FaceColor="b")
-            draw_xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), ylim, 'b', 0.3);
-            for i = 1:length(index_cycle_selected)
-                xline(m_cycle(index_cycle_selected(i),1), '-', num2str(index_cycle_selected(i)));
-            end
-            title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
-            ax = gca; % Get current axes
-            ax.FontSize = 14;
-
-            figure
-            bar(std_w)
-            string_vector = arrayfun(@num2str, 1:n, 'UniformOutput', false);
-            hold on
-            plot(avg_std, '*', 'MarkerSize',15)
-            yline(th,'-', 'Threshold for selection')
-            % Not compatible with Matlab 2019a
-            % xline(index_cycle_selected, '-', num2cell(index_cycle_selected))
-            for i = 1:length(index_cycle_selected)
-                xline(index_cycle_selected(i), '-', num2str(index_cycle_selected(i)));
-            end
-            title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
-            legend(string_vector{:}, 'mean std for cycle')
-            ax = gca; % Get current axes
-            ax.FontSize = 14;
+    if graph
+        figure
+        plot(phase)
+        hold on 
+        plot(R_locs, phase(R_locs), 'o', 'MarkerFaceColor','red')
+        % Not compatible with Matlab 2019a
+        % xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), FaceColor="b")
+        draw_xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), ylim, 'b', 0.3);
+        for i = 1:length(index_cycle_selected)
+            xline(m_cycle(index_cycle_selected(i),1), '-', num2str(index_cycle_selected(i)));
         end
+        title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
+
+        figure
+        bar(std_w)
+        string_vector = arrayfun(@num2str, 1:n, 'UniformOutput', false);
+        hold on
+        plot(avg_std, '*', 'MarkerSize',15)
+        yline(th,'-', 'Threshold for selection')
+        % Not compatible with Matlab 2019a
+        % xline(index_cycle_selected, '-', num2cell(index_cycle_selected))
+        for i = 1:length(index_cycle_selected)
+            xline(index_cycle_selected(i), '-', num2str(index_cycle_selected(i)));
+        end
+        title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+        legend(string_vector{:}, 'mean std for cycle')
+        ax = gca; % Get current axes
+        ax.FontSize = 14;
     end
 end
 

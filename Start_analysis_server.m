@@ -46,15 +46,18 @@ fs = 1024;
 T = 30;
 delta = 5;
 
-combinations = {'m1n3', 'm1n4','m2n5','m2n7'};
+combinations = {'m1n3', 'm1n4','m1n5', 'm2n5','m2n7'};
 sleep_stages = {'Awake', 'n1', 'n2', 'n3', 'REM'};
 
-%% Until the s31 complete the second night acquisition
+%% s31 at the moment has only one night
 d(strcmp({d.name}, 's31')) = [];
+
+%% s28 0 samples in n3 sleep stage
+d(strcmp({d.name}, 's28')) = [];
 %%
 
-parfor k = 1:length(d)
-    
+for k = 1:length(d)
+        
     if k==3
         disp('test')
     end
@@ -64,13 +67,15 @@ parfor k = 1:length(d)
     car = struct();
     sub_name = d(k).name;
     
-    for j = 1:2
+    disp(['Subjects analysed: ' num2str(round((k/length(d))*100,2)) '%     -    ' sub_name]);
+
+    parfor j = 1:2
         night = ['n' num2str(j)];
-        % Create a folder for the subject
+        %% Create a folder for the subject
         status = mkdir(['output/'  sub_name '/' night]);
         save_path = ['output/' sub_name '/' night '/'];
         
-        % Load restricted part of the mat file
+        %% Load restricted part of the mat file
         sel_path = [d(k).folder '/' sub_name '/' night '/process/'];
         raw_data_path = [sel_path 'raw_data.mat'];
         mfile = matfile(raw_data_path);
@@ -78,7 +83,7 @@ parfor k = 1:length(d)
         ecg = mfile.y(65,:);
         respiration = mfile.y(68,:);
         
-        % Extraction of sound event
+        %% Extraction of sound event
         [sound_events] = extract_sound_info(sound);
 
         % Load the sleep stages
@@ -139,11 +144,11 @@ parfor k = 1:length(d)
         [res.REM.max_pks, res.REM.max_locs, res.REM.min_pks, res.REM.min_locs, res.REM.data_cln, res.REM.mean_bpm] = clean_data_find_peaks(0.5, 0.07, fs, respiration(raw_data.REM.idx), 'N4', "respiration", "no");
 
         %% Breathing cycles cleaning from outliers, for both maximum and minimum
-        [res.Awake.cycles_max, res.Awake.cycles_min] = filter_breathing_cycles(res.Awake.data_cln, res.Awake.max_pks, res.Awake.max_locs, res.Awake.min_pks, res.Awake.min_locs, fs, "no");
-        [res.n1.cycles_max, res.n1.cycles_min] = filter_breathing_cycles(res.n1.data_cln, res.n1.max_pks, res.n1.max_locs, res.n1.min_pks, res.n1.min_locs, fs, "no");
-        [res.n2.cycles_max, res.n2.cycles_min] = filter_breathing_cycles(res.n2.data_cln, res.n2.max_pks, res.n2.max_locs, res.n2.min_pks, res.n2.min_locs, fs, "no");
-        [res.n3.cycles_max, res.n3.cycles_min] = filter_breathing_cycles(res.n3.data_cln, res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, fs, "no");
-        [res.REM.cycles_max, res.REM.cycles_min] = filter_breathing_cycles(res.REM.data_cln, res.REM.max_pks, res.REM.max_locs, res.REM.min_pks, res.REM.min_locs, fs, "no");
+        [res.Awake.cycles_max, res.Awake.cycles_min, res.Awake.perc_remotion_min] = filter_breathing_cycles(res.Awake.data_cln, res.Awake.max_pks, res.Awake.max_locs, res.Awake.min_pks, res.Awake.min_locs, fs, "no");
+        [res.n1.cycles_max, res.n1.cycles_min, res.n1.perc_remotion_min] = filter_breathing_cycles(res.n1.data_cln, res.n1.max_pks, res.n1.max_locs, res.n1.min_pks, res.n1.min_locs, fs, "no");
+        [res.n2.cycles_max, res.n2.cycles_min, res.n2.perc_remotion_min] = filter_breathing_cycles(res.n2.data_cln, res.n2.max_pks, res.n2.max_locs, res.n2.min_pks, res.n2.min_locs, fs, "no");
+        [res.n3.cycles_max, res.n3.cycles_min, res.n3.perc_remotion_min] = filter_breathing_cycles(res.n3.data_cln, res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, fs, "no");
+        [res.REM.cycles_max, res.REM.cycles_min, res.REM.perc_remotion_min] = filter_breathing_cycles(res.REM.data_cln, res.REM.max_pks, res.REM.max_locs, res.REM.min_pks, res.REM.min_locs, fs, "no");
 
         %% Plot in polar coordianates the the R peaks signals in a respiratory cycle. 
         f0 = phase_R(res.Awake.cycles_min, res.Awake.data_cln, car.Awake.locs, 0, 'N0',"no");
@@ -179,6 +184,9 @@ parfor k = 1:length(d)
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_cycle = sync_cycle; 
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).m_cycle = m_cycle;
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).cycle = cycles;
+                %% Perctentage outliers
+                result.(combinations{c}).sleep_stages.(sleep_stages{i}).perc_out_R = car.(sleep_stages{i}).p_R_out;
+                result.(combinations{c}).sleep_stages.(sleep_stages{i}).perc_out_B = res.(sleep_stages{i}).perc_remotion_min;
 
                 %% Save the signals ECG and respiratory
                 if c == 1
@@ -186,7 +194,7 @@ parfor k = 1:length(d)
                     result.sleep_data.(sleep_stages{i}).R_locs = R_locs;
                     result.sleep_data.(sleep_stages{i}).h_bmp = car.(sleep_stages{i}).mean_bpm;
                     result.sleep_data.(sleep_stages{i}).r_bmp = res.(sleep_stages{i}).mean_bpm;
-                    result.sleep_data.(sleep_stages{i}).perc = raw_data.(sleep_stages{i}).perc;
+                    result.sleep_data.(sleep_stages{i}).night_phase_perc = round(raw_data.(sleep_stages{i}).perc,1);
                 end
                 
                 %% Save sound events results
