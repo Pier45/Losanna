@@ -54,6 +54,13 @@ d(strcmp({d.name}, 's31')) = [];
 
 %% s28 0 samples in n3 sleep stage
 d(strcmp({d.name}, 's28')) = [];
+
+%% s12 lack of a stop event in baseline 
+d(strcmp({d.name}, 's12')) = [];
+
+%% s21 n2 lask of 1 stop event in the sync array
+d(strcmp({d.name}, 's21')) = [];
+
 %%
 
 for k = 1:length(d)
@@ -69,7 +76,7 @@ for k = 1:length(d)
     
     disp(['Subjects analysed: ' num2str(round((k/length(d))*100,2)) '%     -    ' sub_name]);
 
-    parfor j = 1:2
+    for j = 1:2
         night = ['n' num2str(j)];
         %% Create a folder for the subject
         status = mkdir(['output/'  sub_name '/' night]);

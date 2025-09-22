@@ -24,14 +24,16 @@ function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, sa
     time_sync = sum(duration_cycles);
     perc_sync = 100*time_sync/total_time;
     
-    if graph
+    if graph && perc_sync~=0
         figure
         plot(phase)
         hold on 
         plot(R_locs, phase(R_locs), 'o', 'MarkerFaceColor','red')
         % Not compatible with Matlab 2019a
         % xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), FaceColor="b")
-        draw_xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), ylim, 'b', 0.3);
+        start = min(m_cycle(sync_cycle,1));
+        stop = max(m_cycle(sync_cycle,2));
+        draw_xregion(start, stop, ylim, 'b', 0.3);
         for i = 1:length(index_cycle_selected)
             xline(m_cycle(index_cycle_selected(i),1), '-', num2str(index_cycle_selected(i)));
         end

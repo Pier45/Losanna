@@ -1,4 +1,4 @@
-Iclc
+clc
 close all
 clear
 
@@ -8,7 +8,7 @@ load(name_path)
 
 fs = 1024;
 T = 30;
-m = 1; n = 3;
+m = 2; n = 7;
 delta = 5;
 
 sleep_stages = fieldnames(res(1));
@@ -21,7 +21,7 @@ for i = 1:length(sleep_stages)
     data = res.(sleep_stages{i}).data_cln;
 
     [phase, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
-    [perc_sync, sync_cycle]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages_names{i}, fs, false);
+    [perc_sync, sync_cycle]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages_names{i}, fs, true);
     
     %% Save sleep stage data output
     result.sleep_stages.(sleep_stages_names{i}).sync_perc = perc_sync;

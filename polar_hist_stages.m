@@ -41,5 +41,7 @@ function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save, save_path)
     if save
         print(fig, [save_path 'raw_data_polar_hist.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
     end
+    
+    close(fig)
 end
 
