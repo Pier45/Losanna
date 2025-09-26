@@ -1,4 +1,4 @@
-function [sound_events] = extract_sound_info(sound)
+function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night)
 %%  EXTRACT_SOUND_INFO 
 %   Extracts various synchronization points from the input sound data.
 %   The function takes a vector 'sound' as input and returns a structure 'sound_events' 
@@ -33,13 +33,21 @@ function [sound_events] = extract_sound_info(sound)
     %% Retrive the fieldnames of the sound events
     sound_cond = fieldnames(rmfield(sound_events, 'sound_locs'));
     
+    if convertCharsToStrings(sub_name) == "s12" && convertCharsToStrings(night) == "n1"
+        %% s12 lack of a stop event in baseline 
+        sound_events.baseline.start(20) = [];
+    elseif convertCharsToStrings(sub_name) == "s21" && convertCharsToStrings(night) == "n2"
+        %% s21 n2 lask of 1 stop event in the sync array
+        sound_events.sync.start(6) = [];        
+    end
+
     %% Create a vector for each condition
     sound_events.vector = zeros(length(sound), 1);
     for s=1:size(sound_cond)
         for r=1:size(sound_events.(sound_cond{s}).start,2)
             if convertCharsToStrings(sound_cond{s}) == "sync"
                 sasa = 96;
-            elseif convertCharsToStrings(sound_cond{s}) == "async"
+            elseif convertCharsToStrings(sound_cond{s}) == "asynch"
                 sasa = 160;
             elseif convertCharsToStrings(sound_cond{s}) == "isoch"
                 sasa = 128;
@@ -50,13 +58,53 @@ function [sound_events] = extract_sound_info(sound)
         end
     end
     
-%     figure, 
-%     plot(sound_events.vector)
-%     hold on
-%     yline(192, '-','baseline')
-%     yline(128, '-','isoc')
-%     yline(160, '-','async')
-%     yline(96, '-','sync')
-    
+    if save_plot
+        figure;
+        plot(sound_events.vector, 'k') % plot in black for visibility
+        hold on;
+
+        % Add horizontal reference lines
+        yline(192, '-', 'baseline', 'Color', [.7 .7 .7]);
+        yline(128, '-', 'isoc', 'Color', 'b');
+        yline(160, '-', 'async', 'Color', 'k');
+        yline(96, '-', 'sync', 'Color', 'r');
+
+        % Define values to highlight and corresponding colors
+        target_values = [192, 128, 160, 96];
+        colors = {[.7 .7 .7], 'b', 'k', 'r'}; % pastel shades
+
+        for i = 1:length(target_values)
+            val = target_values(i);
+            color = colors{i};
+
+            % Find all indices where the vector equals the target value
+            idx = find(sound_events.vector == val);
+
+            % Group consecutive indices into segments
+            if ~isempty(idx)
+                d = diff(idx);
+                edges = [0, find(d > 1)', length(idx)];
+                for j = 1:length(edges)-1
+                    start_idx = idx(edges(j)+1);
+                    end_idx = idx(edges(j+1));
+                    width = end_idx - start_idx + 1;
+
+                    % Draw rectangle
+                    rectangle('Position', [start_idx, min(ylim), width, val], ...
+                              'FaceColor', color, 'EdgeColor', 'none');
+                end
+            end
+        end
+
+        % Plot again on top for visibility
+        plot(sound_events.vector, 'k', 'LineWidth', 1.2);
+
+        hold off;
+        title("Sound blocks")
+        ax = gca; % Get current axes
+        set(ax, 'LooseInset', get(gca, 'TightInset')) % tight layout
+        ax.FontSize = 14;
+    end
+
 
 end

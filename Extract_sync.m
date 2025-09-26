@@ -2,13 +2,14 @@ clc
 close all
 clear
 
-name_path = "output\card_resp\info_s21.mat";
+dir_path = dir();
+name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '/output/card_resp/car_resp_s28.mat'];
 match = char(regexp(name_path, '_s\w+', 'match'));
 load(name_path)
 
 fs = 1024;
 T = 30;
-m = 2; n = 7;
+m = 1; n = 4;
 delta = 5;
 
 sleep_stages = fieldnames(res(1));
