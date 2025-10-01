@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-path_folder = 'output';
+path_folder = 'output/sleep/';
 d = dir([path_folder '/s*']);
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
 d = d(is_match, :);
@@ -46,6 +46,7 @@ for c = 1:length(combinations)
                 test_perc(kk) = perc;
                 kk = kk + 1;
             end
+            
             if not(isempty(tab))
                 for ea=1:size(tab,1)
                     cod=tab.Code(ea);

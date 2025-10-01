@@ -1,4 +1,4 @@
-function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_peaks(fc1, fc2, fs, data, sleep_stage, mode, graph)
+function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_peaks(fc, fs, data, sleep_stage, mode, graph)
 % CLEAN_DATA_FIND_PEAKS
 % INPUT
 % fc1 = cut off frequency.
@@ -16,19 +16,17 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
 % mean_bpm = mean heart beat
 
     if not(isempty(data))
-        [b,a] = butter(3,fc1/(fs/2),'low');% initial order 2
+        [b,a] = butter(4,fc/(fs/2),'low');% initial order 2
         f_data = filtfilt(b,a,data);
 
         if mode == "cardiac"
-            [b,a] = butter(5,fc2/(fs/2),'low');% initial order 5
-            f_data_low = filtfilt(b,a,f_data);
+            f_data_low = movmedian(f_data, fs);
             clear_data = f_data-f_data_low;
             std_hb = std(clear_data);
             [pks,locs] = findpeaks(clear_data, 'MinPeakDistance', fs/2, 'MinPeakHeight',mean(clear_data)+std_hb*2);
             pks_min = 0; locs_min = 0;
         else
-            [b,a] = butter(2,fc2/(fs/2),'low');
-            f_data_low = filtfilt(b,a,f_data);
+            f_data_low = movmedian(f_data, fs*45);
 
             clear_data = f_data-f_data_low;
             % Searching for maximum values

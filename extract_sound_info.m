@@ -1,4 +1,4 @@
-function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night)
+function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night, save_path)
 %%  EXTRACT_SOUND_INFO 
 %   Extracts various synchronization points from the input sound data.
 %   The function takes a vector 'sound' as input and returns a structure 'sound_events' 
@@ -35,7 +35,7 @@ function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night)
     
     if convertCharsToStrings(sub_name) == "s12" && convertCharsToStrings(night) == "n1"
         %% s12 lack of a stop event in baseline 
-        sound_events.baseline.start(20) = [];
+        sound_events.baseline.start(15) = [];
     elseif convertCharsToStrings(sub_name) == "s21" && convertCharsToStrings(night) == "n2"
         %% s21 n2 lask of 1 stop event in the sync array
         sound_events.sync.start(6) = [];        
@@ -59,7 +59,7 @@ function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night)
     end
     
     if save_plot
-        figure;
+        fig2 = figure;
         plot(sound_events.vector, 'k') % plot in black for visibility
         hold on;
 
@@ -104,6 +104,9 @@ function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night)
         ax = gca; % Get current axes
         set(ax, 'LooseInset', get(gca, 'TightInset')) % tight layout
         ax.FontSize = 14;
+        
+        print(fig2, [save_path '/Sound_blocks_check.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
+        close(fig2)
     end
 
 

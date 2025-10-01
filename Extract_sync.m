@@ -3,13 +3,13 @@ close all
 clear
 
 dir_path = dir();
-name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '/output/card_resp/car_resp_s28.mat'];
+name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '/output/card_resp/car_resp_s27.mat'];
 match = char(regexp(name_path, '_s\w+', 'match'));
 load(name_path)
 
 fs = 1024;
 T = 30;
-m = 1; n = 4;
+m = 1; n = 3;
 delta = 5;
 
 sleep_stages = fieldnames(res(1));
