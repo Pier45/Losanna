@@ -34,7 +34,13 @@ function [c_pks_cln, c_locs_cln, p_out] = filter_R_peaks(c_pks, c_locs, RR_windo
     p_out = round(sum(out_len_unilenght | out_pks)/ length(c_pks)*100, 1);
 
     if graph == "plot"
-        fig2 = figure('Units', 'normalized', 'OuterPosition', [0 0 1 1]  );     
+        if contains(save_path, 's') 
+            fig2 = figure('doublebuffer','off', 'Visible','Off');
+            set(fig2,'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+        else
+            fig2 = figure('Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+        end
+        
         plot(data, 'Color', [0.7 0.7 0.7], 'LineWidth', 0.1)
         hold on
         plot(c_locs, c_pks,'r+')

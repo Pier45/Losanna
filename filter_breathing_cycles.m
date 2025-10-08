@@ -11,22 +11,22 @@ function [cycles_max_cln2,cycles_min_cln2, perc_remotion_min] = filter_breathing
     cycles_max = create_cycles(max_locs);
     cycles_min = create_cycles(min_locs);
     
-    [~, out_pks_max] = rmoutliers(max_pks, 'movmean', fs*window_time); %TO CHECK
-    [~, out_pks_min] = rmoutliers(min_pks, 'movmean', fs*window_time); %TO CHECK
-    
+    %% Filtering for cycles amplitude
+    [~, out_pks_max] = rmoutliers(max_pks, 'movmean', fs*window_time);
+    [~, out_pks_min] = rmoutliers(min_pks, 'movmean', fs*window_time);
     [cycles_max_cln] = clean_breathing_cycles(cycles_max, max_locs, out_pks_max, min_locs, out_pks_min);
     [cycles_min_cln] = clean_breathing_cycles(cycles_min, min_locs, out_pks_min, max_locs, out_pks_max);
     
-    % Filtering for cycles length
+    %% Filtering for cycles length
     [~, out_len_max] = rmoutliers(diff(cycles_max_cln'),'movmean', fs*window_time);
     [~, out_len_min] = rmoutliers(diff(cycles_min_cln'),'movmean', fs*window_time);
-
     cycles_max_cln2 = cycles_max_cln(not(out_len_max), :);
     cycles_min_cln2 = cycles_min_cln(not(out_len_min), :);
     
     perc_remotion_max = round(100*(sum(out_len_max) + sum(out_pks_max))/size(cycles_max, 1),2);
     perc_remotion_min = round(100*(sum(out_len_min) + sum(out_pks_min))/size(cycles_min, 1),2);
 
+    p_good_cycles = (sum(diff(cycles_min_cln2'))/length(data))*100;
     %% Comparison between cycles samples length before and after outliers remotion
     % figure
     % histogram(diff(cycles_min_cln'))
@@ -44,7 +44,13 @@ function [cycles_max_cln2,cycles_min_cln2, perc_remotion_min] = filter_breathing
     
     %% Visualization cycles
     if graph == "plot"
-        fig2=figure('Units', 'normalized', 'OuterPosition', [0 0 1 1]);        
+        if contains(save_path, 's') 
+            fig2 = figure('doublebuffer','off', 'Visible','Off');
+            set(fig2,'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+        else
+            fig2 = figure('Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+        end
+        
         plot(data, 'k');
         hold on
         scatter(max_locs(out_pks_max), max_pks(out_pks_max), 150, 'o',  'MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5);
@@ -52,10 +58,10 @@ function [cycles_max_cln2,cycles_min_cln2, perc_remotion_min] = filter_breathing
         scatter(max_locs, max_pks, 'r+')
         scatter(min_locs, min_pks, 'b+')
         axis tight
-        draw_xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), ylim, 'b', 0.2);
+%         draw_xregion(cycles_max_cln(out_len_max,1), cycles_max_cln(out_len_max,2), ylim, 'b', 0.2);
         draw_xregion(cycles_min_cln(out_len_min,1), cycles_min_cln(out_len_min,2), ylim, 'r', 0.2);
-        %draw_xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2), ylim, [0.5 0.5 0.5], 0.2);
-        draw_xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2), ylim, 'k', 0.1);
+%         draw_xregion(cycles_max_cln2(:,1), cycles_max_cln2(:,2), ylim, [0.5 0.5 0.5], 0.2);
+        draw_xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2), ylim, [6,64,43]/256, 0.2);
         legend('Respiration', 'Max amp out', 'Min amp out', 'Max spikes', 'Min spikes');
         set(gca, 'LooseInset', get(gca, 'TightInset'));
         
@@ -66,7 +72,7 @@ function [cycles_max_cln2,cycles_min_cln2, perc_remotion_min] = filter_breathing
         %         xregion(cycles_min_cln2(:,1), cycles_min_cln2(:,2))
         %%
         
-        title([stage ' - Perc removed from max: ' num2str(perc_remotion_max) '% - Perc removed form min: ' num2str(perc_remotion_min) '%'])
+        title([stage ' - Selected cycles: ' num2str(round(p_good_cycles,2)) '%'])
         ax = gca; % Get current axes
         ax.FontSize = 14;
         axis tight

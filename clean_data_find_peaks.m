@@ -30,9 +30,9 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
 
             clear_data = f_data-f_data_low;
             % Searching for maximum values
-            [pks,locs] = findpeaks(clear_data, 'MinPeakDistance', fs*2, 'MinPeakHeight', mean(clear_data));
+            [pks,locs] = findpeaks(clear_data, 'MinPeakDistance', fs*3, 'MinPeakHeight', mean(clear_data));
             % Searching for minimum values
-            [pks_min,locs_min] = findpeaks(-clear_data, 'MinPeakDistance', fs*2, 'MinPeakHeight', -mean(clear_data));
+            [pks_min,locs_min] = findpeaks(-clear_data, 'MinPeakDistance', fs*3, 'MinPeakHeight', -mean(clear_data));
             pks_min = - pks_min;
             locs_min = cast(locs_min, 'single');
         end

@@ -1,10 +1,11 @@
-function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, fs, graph)
+function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, graph)
 % SYNC_PHASE2 compute the percentage of synchronized cycles under the threshold.
+    
     if m_cycle ~= 0
         %% Threshold formula.
         th = (2*pi*m)/(n*delta);
 
-        total_time = length(phase)/fs;
+        total_samples_filtered = sum(diff(m_cycle'));%length(phase);
 
         % Average of the std values computed on windows of 30 seconds.
         avg_std = mean(std_w(:,1:n),2);
@@ -19,10 +20,10 @@ function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, sa
 
         % Computing the percentage of time in seconds where there is
         % synchronization (equal to perc_sync_cycles).
-        duration_cycles = (m_cycle(sync_cycle,2)-m_cycle(sync_cycle,1))/fs;
+        duration_cycles = (m_cycle(sync_cycle,2)-m_cycle(sync_cycle,1));
 
-        time_sync = sum(duration_cycles);
-        perc_sync = 100*time_sync/total_time;
+        sync_samples = sum(duration_cycles);
+        perc_sync = 100*sync_samples/total_samples_filtered;
 
         if graph && perc_sync~=0
             figure
@@ -59,7 +60,7 @@ function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, sa
         end
     else
         perc_sync = 0;
-        sync_cycle = 0;
+        sync_cycle = [];
     end
 end
 
