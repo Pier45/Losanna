@@ -55,8 +55,9 @@ else
     sleep_stages = {'Awake'};
 end
 
+%% Settable parameters 
 fs = 1024;
-T = 30;
+T = 15;
 delta = 5;
 RR_window_pks = 20;
 RR_window_len = 20;
@@ -65,13 +66,16 @@ sf_car = 20;
 
 combinations = {'m1n2', 'm1n3', 'm1n4', 'm1n5', 'm1n6', 'm2n5','m2n7'};
 
+sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
+sound_codes = [0, 96, 160, 128, 192];
+
 %% s31 removed
 d(strcmp({d.name}, 's31')) = [];
-%%
+
 
 for k = 1:length(d)
         
-    if k==3
+    if k==2
         disp('test')
     end
     
@@ -200,9 +204,9 @@ for k = 1:length(d)
             f3 = phase_R(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0, 'N3',"no");
             f4 = phase_R(res.REM.cycles_min, res.REM.data_cln, car.REM.locs, 0, 'N4',"no");
         
-            polar_hist_stages(f0,f1,f2,f3,f4, 60, true, path_save);
+            polar_hist_stages(f0,f1,f2,f3,f4, 60, path_save);
         else
-            polar_hist_stages(f0,0,0,0,0, 60, true, path_save);
+            polar_hist_stages(f0,0,0,0,0, 60, path_save);
         end
 
         %% Extract sync data
@@ -263,7 +267,7 @@ for k = 1:length(d)
                 perc_sync_all(i) = result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_perc;
             end
    
-            [sleepTable] = bar_sleep(sleep_stages, perc_sync_all, sub_name, night, m, n, path_save);            
+            [sleepTable] = bar_sleep(sleep_stages, sub_name, night, m, n, sound_cond, result.(combinations{c}).sleep_stages, path_save);            
         end
         %% Save configuration
         result.combinations = combinations;
@@ -281,6 +285,41 @@ for k = 1:length(d)
  
     end
     time_sub = toc(tstart);
-    fprintf('Progress: %6.2f%%   -   sub =%4s   -   time = %8.1fs\n', round((k/length(d))*100,2), sub_name, time_sub);
-
+    fprintf('Progress: %6.2f%%   -   completed sub =%4s   -   time = %8.1fs\n', round((k/length(d))*100,2), sub_name, time_sub);
 end
+
+% try
+%     load('/home/piero/Desktop/raw_data.mat')
+% catch ME
+%     disp('=== FULL ERROR REPORT ===')
+%     disp(getReport(ME, 'extended'))
+%     
+%     % Try to read HDF5 info directly
+%     try
+%         info = h5info('/home/piero/Desktop/raw_data.mat');
+%         disp('HDF5 structure is readable')
+%     catch ME2
+%         disp('=== HDF5 ERROR ===')
+%         disp(ME2.message)
+%     end
+% end
+% 
+% % Load the file to see structure
+% m = matfile('/home/piero/Desktop/sa/corrupted_raw_data.mat');
+% 
+% % Test each column
+% bad_cols = [];
+% for i = 1700000:2100000
+%     try
+%         temp = m.y(69, i);  % Try to read column i
+%         if mod(i, 1000) == 0
+%             fprintf('Column %d: OK\n', i);
+%         end
+%     catch ME
+%         fprintf('Column %d: CORRUPTED - %s\n', i, ME.message);
+%         bad_cols = [bad_cols, i];
+%     end
+% end
+% 
+% fprintf('\nCorrupted columns: ');
+% disp(bad_cols);

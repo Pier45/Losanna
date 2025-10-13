@@ -41,19 +41,49 @@ function [c_pks_cln, c_locs_cln, p_out] = filter_R_peaks(c_pks, c_locs, RR_windo
             fig2 = figure('Units', 'normalized', 'OuterPosition', [0 0 1 1]);
         end
         
-        plot(data, 'Color', [0.7 0.7 0.7], 'LineWidth', 0.1)
+%         plot(data, 'Color', [0.7 0.7 0.7], 'LineWidth', 0.1)
+%         hold on
+%         plot(c_locs, c_pks,'r+')
+%         scatter(c_locs(out_pks), c_pks(out_pks),150, 'o','MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5);
+%         plot(c_locs(out_len_unilenght), c_pks(out_len_unilenght),'bo','MarkerSize',10, 'LineWidth', 3)
+%         legend('ECG', ['raw peaks ' num2str(length(c_pks))], ...
+%             ['amp outlier ' num2str(sum(out_pks)) ' - ' num2str(round((sum(out_pks)/length(c_pks))*100,3)) '%'],...
+%             ['time outlier ' num2str(sum(out_len)) ' - ' num2str(round((sum(out_len)/length(c_pks))*100,3)) '%']);
+
+        h_ecg = plot(data, 'Color', [0.7 0.7 0.7], 'LineWidth', 0.1);
         hold on
-        plot(c_locs, c_pks,'r+')
-        scatter(c_locs(out_pks), c_pks(out_pks),150, 'o','MarkerFaceColor','#FFD700', 'MarkerFaceAlpha',.5);
-        plot(c_locs(out_len_unilenght), c_pks(out_len_unilenght),'bo','MarkerSize',10, 'LineWidth', 3)
-        legend('ECG', ['raw peaks ' num2str(length(c_pks))], ...
-            ['amp outlier ' num2str(sum(out_pks)) ' - ' num2str(round((sum(out_pks)/length(c_pks))*100,3)) '%'],...
-            ['time outlier ' num2str(sum(out_len)) ' - ' num2str(round((sum(out_len)/length(c_pks))*100,3)) '%']);
-        set(gca, 'LooseInset', get(gca, 'TightInset'));
+
+        % Plot all peaks
+        h_peaks = plot(c_locs, c_pks, 'r+');
+
+        % Init handle array and labels
+        legend_handles = [h_ecg, h_peaks];
+        legend_labels = {'ECG', ['raw peaks ' num2str(length(c_pks))]};
+
+        % Plot amp outliers (if any)
+        if any(out_pks)
+            h_amp_out = scatter(c_locs(out_pks), c_pks(out_pks), 150, 'o', ...
+                'MarkerFaceColor', '#FFD700', 'MarkerFaceAlpha', 0.5);
+            legend_handles(end+1) = h_amp_out;
+            legend_labels{end+1} = ['amp outlier ' num2str(sum(out_pks)) ...
+                ' - ' num2str(round((sum(out_pks)/length(c_pks))*100,3)) '%'];
+        end
+
+        % Plot time outliers (if any)
+        if any(out_len_unilenght)
+            h_time_out = plot(c_locs(out_len_unilenght), c_pks(out_len_unilenght), ...
+                'bo', 'MarkerSize', 10, 'LineWidth', 3);
+            legend_handles(end+1) = h_time_out;
+            legend_labels{end+1} = ['time outlier ' num2str(sum(out_len)) ...
+                ' - ' num2str(round((sum(out_len)/length(c_pks))*100,3)) '%'];
+        end
+
+        % Add legend only for plotted elements
+        legend(legend_handles, legend_labels, 'Location', 'best');
+
+        set(gca, 'LooseInset', get(gca, 'TightInset'), 'FontSize', 14);
         axis tight
         title([stage ' - Percentage of outlier: ' num2str(p_out) '%'])
-        ax = gca; % Get current axes
-        ax.FontSize = 14;
         
         if contains(save_path, 's') 
             print(fig2, [save_path '.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution

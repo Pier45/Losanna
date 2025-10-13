@@ -2,17 +2,30 @@ clear
 close all
 clc
 
-path_folder = 'output/sleep/';
+%% Select the folder, 1 sleep, 2 awake
+conditions = ['sleep'; 'awake'];
+selected_cond = conditions(2,:);
+
+path_folder = ['output/', selected_cond];
 d = dir([path_folder '/s*']);
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
 d = d(is_match, :);
 
-sleep_stages = {'Awake',  'REM', 'n1', 'n2', 'n3'}';
+if convertCharsToStrings(selected_cond) == "sleep"
+    number_folder = 2;
+    sleep_stages = {'Awake', 'REM', 'n1', 'n2', 'n3'}';
+    sel_path = [d(1).folder '/' d(1).name '/n1/' ];
+else
+    number_folder = 1;
+    sleep_stages = {'Awake'};
+    sel_path = [d(1).folder '/' d(1).name '/' ];
+end
 
 %% s31 at the moment has only one night
 d(strcmp({d.name}, 's31')) = [];
+sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
+sound_codes = [0, 96, 160, 128, 192];
 
-sel_path = [d(1).folder '/' d(1).name '/n1/' ];
 raw_data_path = [sel_path 'result.mat'];
 load(raw_data_path);        
 combinations = result.combinations;
@@ -111,19 +124,36 @@ combinations = result.combinations;
 %     ax.FontSize = 14;
 % end
 
-sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
-sound_codes = [0, 96, 160, 128, 192];
     
 agg_result = struct();
 for k = 1:length(d)
     sub_name = d(k).name;
 
-    for j = 1:2
-        night = ['n' num2str(j)];
-        path_save = ['output/sleep/' sub_name '/' night '/'];
+    for j = 1:number_folder
+        if number_folder > 1
+            night = ['n' num2str(j)];
+            sel_path = [d(k).folder '/' sub_name '/' night '/process/'];
 
-        %% Load restricted part of the mat file
-        sel_path = [d(k).folder '/' sub_name '/' night '/'];
+            %% Create a folder for the subject
+            path_checks = ['output/sleep/'  sub_name '/' night '/check_plots'];
+            path_save = ['output/sleep/' sub_name '/' night '/'];
+
+            if not(exist(path_save, 'dir'))
+                status = mkdir(path_save);        
+            end
+        else
+            path_checks = ['output/awake/'  sub_name '/check_plots'];
+            path_save = ['output/awake/' sub_name '/'];
+            
+            if not(exist(['output/awake/'  sub_name '/'], 'dir'))
+                status = mkdir(['output/awake/'  sub_name '/']);        
+            end
+            
+            sel_path = [d(k).folder '/' sub_name '/'];
+            night = 'n0';
+        end
+        
+        %% Loading
         raw_data_path = [sel_path 'result.mat'];
         load(raw_data_path);
         sound_vector = result.sound_events.vector;
@@ -157,7 +187,7 @@ for k = 1:length(d)
                     agg_result.(sub_name).(night).sleep_stages.(sleep_stages{i}).sync_perc = (sum(agg_result.(sub_name).(night).sleep_stages.(sleep_stages{i}).log_cycle)*100)/agg_result.(sub_name).(night).sleep_stages.(sleep_stages{i}).tot_samples;       
                     
                     sound_table = table();
-                    sound_sel = sound_vector(logic_selection);
+                    sound_sel = sound_vector(agg_result.(sub_name).(night).sleep_stages.(sleep_stages{i}).log_cycle);
                     if not(isempty(sound_sel))
                         counts = zeros(size(sound_codes));
                         for g = 1:length(sound_codes)
@@ -174,30 +204,18 @@ for k = 1:length(d)
         
         %% If a sync perc in at least one sleep stage is > 0, create plot
         if any(contains(fieldnames(agg_result), sub_name))
-            sl_sync = fieldnames(agg_result.(sub_name).(night).sleep_stages);
-
-            % Initialize percentage array
-            percentages = zeros(length(sleep_stages), 1);
-
-            % Loop through each stage and extract the percentage
-            for i = 1:length(sleep_stages)
-                stage_name = sleep_stages{i};
-
-                % Only proceed if the stage exists in the struct
-                if ismember(stage_name, sl_sync)
-                    percentages(i) = agg_result.(sub_name).(night).sleep_stages.(stage_name).sync_perc;
-                else
-                    percentages(i) = 0; 
-                end
-            end
-            [sleepTable] = bar_sleep(sleep_stages, percentages, sub_name, night, 0, 0, path_save);
+            [sleepTable] = bar_sleep(sleep_stages, sub_name, night, 0, 0, sound_cond, agg_result.(sub_name).(night).sleep_stages, path_save);             
             agg_result.(sub_name).(night).summary_table = sleepTable;
         end
     end
     fprintf('Progress: %6.2f%%   -   sub =%4s\n', round((k/length(d))*100,2), sub_name);
 end
 
-
-
-
-  
+% figure;
+% plot(sound_vector, 'b');
+% hold on;
+% plot(find(logic_selection), sound_vector(logic_selection), 'r.', 'MarkerSize', 10);
+% xlabel('Sample');
+% ylabel('Sound Vector Value');
+% legend('Sound Vector', 'Selected Points');
+% grid on;

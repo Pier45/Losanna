@@ -59,8 +59,15 @@ function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night, 
     end
     
     if save_plot
-        fig2 = figure;
+        if contains(save_path, 's') 
+            fig2 = figure('doublebuffer','off', 'Visible','Off');
+        else
+            fig2 = figure();
+        end 
+        set(fig2,'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+
         plot(sound_events.vector, 'k') % plot in black for visibility
+
         hold on;
 
         % Add horizontal reference lines

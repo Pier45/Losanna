@@ -17,7 +17,33 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
 
     if not(isempty(data))
         [b,a] = butter(4,fc/(fs/2),'low');% initial order 2
-        f_data = filtfilt(b,a,data);
+        
+        %% First check outliers sectiond identification
+%         medianV = median(data);
+%         th_bad_section = abs(medianV*20);
+%         log_bad_sections = data > th_bad_section;  
+%         %% Dilate the selection to remove borders effects
+%         N = 100;  % Number of samples to expand (left and right)
+%         log_bad_sections = conv(double(log_bad_sections), ones(1, 2*N+1), 'same') > 0;
+%         cl_data = data;
+%         cl_data(log_bad_sections) = medianV;
+% 
+%         
+        sasa = std(data);
+        mov_mean = movmedian(data, fs*45);
+        log_bad_sections = data > mov_mean+sasa*10 | data < mov_mean-sasa*10;
+        cl_data = data;
+        N = 100;  % Number of samples to expand (left and right)
+        log_bad_sections = conv(double(log_bad_sections), ones(1, 2*N+1), 'same') > 0;
+        cl_data(log_bad_sections) = mov_mean(log_bad_sections);
+        rem_samples = sum(log_bad_sections);
+        
+        if rem_samples > 0
+            fprintf('%s - %s - Bad section identified — removed %d samples - %.3f%% of signal.\n', sleep_stage, mode, rem_samples, rem_samples/length(data)*100);        
+        end
+                
+        %% Low pass filter
+        f_data = filtfilt(b,a,cl_data);
 
         if mode == "cardiac"
             f_data_low = movmedian(f_data, fs);
@@ -46,16 +72,21 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
             figure
             plot(data)
             hold on
+            plot(cl_data, 'm')
             plot(f_data, 'r')
+
+            plot(mov_mean+sasa*10, '-r');
+            plot(mov_mean-sasa*10, '-r');
+            
             plot(f_data_low, 'g')
             plot(clear_data)
             plot(locs, pks, '*')
             axis tight
             if mode == "respiration"
                 plot(locs_min, pks_min, 'r*')
-                legend("raw data", "fileter raw data (high noise)", "low componet data", "data cleaned and aligned", "resp peaks max", "resp peaks min")
+                legend("raw data", "cl_data","fileter raw data (high noise)", "th up", "th down","low componet data", "data cleaned and aligned", "resp peaks max", "resp peaks min")
             else
-                legend("raw data", "fileter raw data (high noise)", "low componet data", "data cleaned and aligned", "peaks")
+                legend("raw data", "cl_data", "fileter raw data (high noise)",  "th up", "th down","low componet data", "data cleaned and aligned", "peaks")
             end
             title([sleep_stage ' - mean ' convertStringsToChars(mode) ' frequency: ' num2str(round(mean_bpm,1)) ' bpm'])
             ax = gca; % Get current axes

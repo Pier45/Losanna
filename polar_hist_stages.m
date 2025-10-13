@@ -1,4 +1,4 @@
-function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save, save_path)
+function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save_path)
 % POLARHIST_MULTISTAGE Plots n polar histogram plot in a subplot.
     % Compute all bin counts without plotting to find the global max
 %     [counts0, ~] = histcounts(f0, n_bar);
@@ -13,7 +13,13 @@ function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save, save_path)
 %     % Round up to a nice value for consistent radial limit
 %     rmax = ceil(maxCount * 1.1);  % 10% margin
     
-    fig = figure();    
+    if contains(save_path, 's') 
+        fig2 = figure('doublebuffer','off', 'Visible','Off');
+    else
+        fig2 = figure();
+    end
+    set(fig2,'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+
     subplot(2,3,1)
     polarhistogram(f0,n_bar,'EdgeAlpha',0.2)
 %     rlim([0 rmax])
@@ -35,13 +41,13 @@ function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save, save_path)
 %     rlim([0 rmax])
     title("Stage n4 (REM)")
     
-    set(fig, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
-    set(fig, 'PaperPositionMode', 'auto');
+    set(fig2, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+    set(fig2, 'PaperPositionMode', 'auto');
     
-    if save
-        print(fig, [save_path 'raw_data_polar_hist.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
+    if contains(save_path, 's') 
+        print(fig2, [save_path 'raw_data_polar_hist.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
     end
     
-    close(fig)
+    close(fig2)
 end
 
