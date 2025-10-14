@@ -5,5 +5,8 @@
 *.avi
 *.mp4
 *.m~
+*.swp
 /output/*
 !/output/
+/data/*
+!/data/
