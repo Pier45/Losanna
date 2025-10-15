@@ -1,4 +1,4 @@
-function [theta_R] = phase_R(r_cycles_cln, r_data_cln, c_locs, k, stage, graph)
+function [theta_R] = phase_res(r_cycles_cln, r_data_cln, c_locs, k, stage, graph)
 % PHASE_SYNC_PLOT function to plot in polar coordinates the phase of the R
 % peaks signals in a respiratory cycle. 
 % INPUT

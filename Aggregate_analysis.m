@@ -2,6 +2,8 @@ clear
 close all
 clc
 
+addpath(genpath('src'))
+
 %% Select the folder, 1 sleep, 2 awake
 conditions = ['sleep'; 'awake'];
 selected_cond = conditions(2,:);

@@ -46,7 +46,7 @@ The toolkit processes multi-modal physiological recordings collected during both
 
 ---
 
-## 🔬 Pipeline Workflow Start_server_analysis
+## 🔬 Pipeline Workflow
 
 ### 1️⃣ **Preprocessing & Feature Extraction**
 
@@ -136,9 +136,6 @@ losanna/
 │
 ├── 📄 Start_analysis_server.m       # Batch processing entry point
 ├── 📄 Aggregate_analysis.m          # Cross-subject statistical analysis
-├── 📄 Extract_car_res.m             # Single-subject preprocessing
-├── 📄 Extract_sync.m                # Single-subject synchronization
-├── 📄 Correpted_recovery.m          # Recovery analysis for corrupted data
 │
 ├── 📂 data/                         # Physiological recordings
 │   ├── 📂 awake/                    # Wakefulness condition data
@@ -147,14 +144,14 @@ losanna/
 ├── 📂 src/                          # Core algorithms
 │   ├── 📂 analysis/                 # Synchronization & phase analysis
 │   │   ├── create_cycles.m          # Respiratory cycle segmentation
-│   │   ├── phase_R.m                # R-peak phase computation
-│   │   ├── sync_phase1.m            # Coarse sync detection
-│   │   ├── sync_phase2.m            # Refined sync detection
-│   │   ├── sync_phase3.m            # Final sync classification
+│   │   ├── phase_res.m              # Respiration phase computation
+│   │   ├── sync_phase1.m            # Extract possible windows of sync
+│   │   ├── sync_phase2.m            # Compute the percentage of sync cycles
+│   │   ├── sync_phase3.m            # Auditory event sync cycle stratification
 │   │   └── extract_sound_info.m     # Auditory event parsing
 │   │
 │   ├── 📂 preprocessing/            # Signal cleaning & filtering
-│   │   ├── filter_breathing_cycles.m    # Respiratory signal filtering
+│   │   ├── filter_res_cycles.m      # Respiratory signal filtering
 │   │   ├── filter_R_peaks.m             # ECG R-peak filtering
 │   │   ├── clean_breathing_cycles.m     # Respiratory artifact removal
 │   │   └── clean_data_find_peaks.m      # Peak detection & QC
@@ -167,7 +164,7 @@ losanna/
 │
 ├── 📂 utils/                        # Development & testing tools
 │   ├── SimulatedSignal.m            # Synthetic data generator
-│   ├── CorruptedIdentification.m    # Data integrity checker
+│   ├── Corrupted_identifier.m       # Data integrity checker
 │   ├── Extract_car_res.m            # Preprocessing validation
 │   └── Extract_sync.m               # Synchronization validation
 │
@@ -179,22 +176,185 @@ losanna/
 
 ## ⚙️ Configuration
 
-Synchronization detection can be tuned via m:n ratio vectors:
+**Losanna** uses a centralized JSON configuration system for flexible parameter management across all analysis scripts. Configuration files are stored in the `config/` directory and allow you to customize:
 
-```matlab
-% Example: Test 1:3, 1:4, and 2:7 synchronization patterns
-combinations = {'m1n3', 'm1n4', 'm2n7'};
+- Dataset paths and output directories
+- Synchronization detection parameters (m:n ratios, thresholds)
+- Signal processing settings (sampling rates, filter parameters)
+- Experimental conditions (sound types, sleep stages)
+- Subject exclusion criteria
 
-% Process each combination
-for i = 1:length(combinations)
-    ...
-end
+### Configuration File Structure
+
+All analysis scripts read parameters from `config/config.json`:
+
+```json
+{
+  "path_folder": "/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/",
+  "number_folder": 2,
+  "data_path": "data/sleep",
+  "output_dir": "output/",
+  
+  "conditions": ["sleep", "awake"],
+  "selected_cond": "sleep",
+  
+  "sync_parameters": {
+    "combinations": ["m1n2", "m1n3", "m1n4", "m1n5", "m1n6", "m2n5", "m2n7"],
+    "T": 15,
+    "delta": 5
+  },
+  
+  "fs": 1024,
+  
+  "filters_parameter": {
+    "RR_window_pks": 20,
+    "RR_window_len": 20,
+    "sf_res": 0.5,
+    "sf_car": 20
+  },
+  
+  "sound_cond": ["nan", "sync", "async", "isoc", "baseline"],
+  "sound_codes": [0, 96, 160, 128, 192],
+  
+  "sleep_stages": ["Awake", "REM", "n1", "n2", "n3"],
+  
+  "subjects_remove": ["s31", "s32"]
+}
 ```
 
-Common physiological ratios:
-- **1:3** – Typical resting state (20 breaths/min, 60 bpm)
-- **1:4** – Relaxed breathing (15 breaths/min, 60 bpm)
-- **2:7** – Deep sleep patterns
+### Parameter Reference
+
+#### Dataset Configuration
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `path_folder` | string | Absolute path to raw data directory | `"/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/"` |
+| `number_folder` | integer | Number of nested subdirectories in data structure | `2` |
+| `data_path` | string | Relative path to data folder | `"data/sleep"` |
+| `output_dir` | string | Directory for analysis results and figures | `"output/"` |
+
+#### Experimental Conditions
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `conditions` | array | Available experimental conditions | `["sleep", "awake"]` |
+| `selected_cond` | string | Active condition for current analysis | `"sleep"` |
+| `sleep_stages` | array | Sleep stage labels for classification | `["Awake", "REM", "n1", "n2", "n3"]` |
+
+#### Synchronization Detection
+| Parameter | Type | Description | Typical Values |
+|-----------|------|-------------|----------------|
+| `combinations` | array | m:n synchronization ratios to test | `["m1n3", "m1n4", "m2n7"]` |
+| `T` | integer | Minimum segment length (in cycles) for synchronization detection | `10-20` |
+| `delta` | integer | Maximum allowed phase deviation (in degrees) for sync classification | `3-10` |
+
+**Synchronization Ratio Notation**: `"m1n3"` → 1 respiratory cycle : 3 R-peaks
+
+**Common Physiological Patterns**:
+- **m1n3**: Typical resting state (20 breaths/min, 60 bpm)
+- **m1n4**: Relaxed breathing (15 breaths/min, 60 bpm)
+- **m2n7**: Deep sleep patterns (~14 breaths/min, 49 bpm)
+
+#### Signal Processing
+| Parameter | Type | Description | Recommended |
+|-----------|------|-------------|-------------|
+| `fs` | integer | Sampling frequency (Hz) of raw signals | `1024` |
+| `RR_window_pks` | integer | Moving window size for R-peak outlier detection (samples) | `20` |
+| `RR_window_len` | integer | Window length for RR-interval filtering (samples) | `20` |
+| `sf_res` | float | Smoothing factor for respiratory signal filtering | `0.1-1.0` |
+| `sf_car` | float | Smoothing factor for cardiac signal filtering | `10-30` |
+
+#### Auditory Stimulation
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `sound_cond` | array | Sound condition labels | `["nan", "sync", "async", "isoc", "baseline"]` |
+| `sound_codes` | array | Numerical event codes matching `sound_cond` order | `[0, 96, 160, 128, 192]` |
+
+**Sound Conditions**:
+- `nan`: No sound (spontaneous activity)
+- `sync`: Sounds synchronized with respiratory phase
+- `async`: Sounds presented asynchronously
+- `isoc`: Isochronous rhythmic stimuli
+- `baseline`: Pre-stimulus baseline period
+
+#### Quality Control
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `subjects_remove` | array | Subject IDs to exclude from batch processing | `["s31", "s32"]` |
+
+### Usage in Scripts
+
+#### Loading Configuration
+```matlab
+% Read configuration file
+config = jsondecode(fileread('config/config.json'));
+
+% Access parameters
+fs = config.fs;
+sync_combos = config.sync_parameters.combinations;
+output_path = config.output_dir;
+```
+
+#### Modifying Parameters Programmatically
+```matlab
+% Update configuration for different analysis
+config.selected_cond = 'awake';
+config.sync_parameters.T = 20;  % Increase minimum segment length
+
+% Save modified configuration
+json_str = jsonencode(config);
+fid = fopen('config/config_awake.json', 'w');
+fprintf(fid, '%s', json_str);
+fclose(fid);
+```
+
+### Quick Configuration Examples
+
+#### Testing New Synchronization Ratios
+```json
+"sync_parameters": {
+  "combinations": ["m1n2", "m1n5", "m3n10"],
+  "T": 12,
+  "delta": 8
+}
+```
+
+#### Processing Wake Data Only
+```json
+"selected_cond": "awake",
+"data_path": "data/awake",
+"sleep_stages": ["Awake"]
+```
+
+#### Strict Synchronization Criteria
+```json
+"sync_parameters": {
+  "combinations": ["m1n3", "m1n4"],
+  "T": 25,
+  "delta": 3
+}
+```
+
+### Configuration Best Practices
+
+1. **Backup Before Editing**: Keep a copy of `config/config_default.json` with standard parameters
+2. **Version Control**: Name configuration files descriptively (e.g., `config_pilot_study.json`, `config_main_analysis.json`)
+3. **Validation**: Test new parameter sets on a single subject using `Extract_sync.m` before batch processing
+4. **Documentation**: Add comments to your configuration files explaining non-standard choices
+5. **Reproducibility**: Archive the exact configuration file used for each publication or report
+
+### Troubleshooting
+
+**Problem**: Script cannot find configuration file  
+**Solution**: Ensure you're running MATLAB from the repository root directory, or use absolute paths in `config.json`
+
+**Problem**: JSON parsing errors  
+**Solution**: Validate JSON syntax at [jsonlint.com](https://jsonlint.com) before running scripts
+
+**Problem**: Unrealistic synchronization results  
+**Solution**: Verify `fs` matches your data's actual sampling rate, adjust `delta` threshold for stricter/looser detection
+
+---
+
+**Next Steps**: After configuring parameters, proceed to [Pipeline Workflow](#-pipeline-workflow) to begin analysis.
 
 ---
 

@@ -39,7 +39,7 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
         rem_samples = sum(log_bad_sections);
         
         if rem_samples > 0
-            fprintf('%s - %s - Bad section identified — removed %d samples - %.3f%% of signal.\n', sleep_stage, mode, rem_samples, rem_samples/length(data)*100);        
+            fprintf('%11s - %5s - Saturation sections - %.3f%% of signal.\n', mode(1:3), sleep_stage, rem_samples/length(data)*100);        
         end
                 
         %% Low pass filter
@@ -75,8 +75,8 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
             plot(cl_data, 'm')
             plot(f_data, 'r')
 
-            plot(mov_mean+sasa*10, '-r');
-            plot(mov_mean-sasa*10, '-r');
+            plot(mov_mean+sasa*10, '--');
+            plot(mov_mean-sasa*10, '--');
             
             plot(f_data_low, 'g')
             plot(clear_data)

@@ -1,4 +1,4 @@
-function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save_path)
+function [] = polar_hist_stages(f, n_bar, save_path)
 % POLARHIST_MULTISTAGE Plots n polar histogram plot in a subplot.
     % Compute all bin counts without plotting to find the global max
 %     [counts0, ~] = histcounts(f0, n_bar);
@@ -20,34 +20,29 @@ function [] = polar_hist_stages(f0,f1,f2,f3,f4, n_bar, save_path)
     end
     set(fig2,'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
 
-    subplot(2,3,1)
-    polarhistogram(f0,n_bar,'EdgeAlpha',0.2)
-%     rlim([0 rmax])
-    title("Stage awake")
-    subplot(2,3,2)
-    polarhistogram(f1,n_bar,'EdgeAlpha',0.2)
-%     rlim([0 rmax])
-    title("Stage n1")
-    subplot(2,3,3)
-    polarhistogram(f2,n_bar,'EdgeAlpha',0.2)
-%     rlim([0 rmax])
-    title("Stage n2")
-    subplot(2,3,4)
-    polarhistogram(f3,n_bar,'EdgeAlpha',0.2)
-%     rlim([0 rmax])
-    title("Stage n3")
-    subplot(2,3,5)
-    polarhistogram(f4,n_bar,'EdgeAlpha',0.2)
-%     rlim([0 rmax])
-    title("Stage n4 (REM)")
+    stages = fieldnames(f);
+    if numel(stages) > 1
+        row = 2;
+        col = ceil(numel(stages)/row);
+    else
+        row = 1;
+        col = 1;
+    end
     
+    for i=1:size(stages ,1)
+        subplot(row,col,i)
+        polarhistogram(f.(stages{i}),n_bar,'EdgeAlpha',0.2)
+        %     rlim([0 rmax])
+        title(['Stage ' stages{i}])
+    end
+
     set(fig2, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
     set(fig2, 'PaperPositionMode', 'auto');
     
     if contains(save_path, 's') 
         print(fig2, [save_path 'raw_data_polar_hist.png'], '-dpng', '-r100');  % -r300 sets 300 DPI resolution
+        close(fig2)
     end
     
-    close(fig2)
 end
 

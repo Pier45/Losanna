@@ -2,15 +2,21 @@ clc
 close all
 clear
 
-dir_path = dir();
-name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '/output/card_resp/car_resp_s27.mat'];
-match = char(regexp(name_path, '_s\w+', 'match'));
-load(name_path)
+addpath(genpath('../src'))
+
+%% Settable parameters
+sub = 's27';
 
 fs = 1024;
 T = 30;
 m = 1; n = 3;
 delta = 5;
+%%
+
+dir_path = dir();
+name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '../output/card_resp/car_resp_' sub '.mat'];
+match = char(regexp(name_path, '_s\w+', 'match'));
+load(name_path)
 
 sleep_stages = fieldnames(res(1));
 sleep_stages_names = {'Awake', 'n1', 'n2', 'n3', 'REM'};

@@ -14,8 +14,8 @@ function [cycles_max_cln2,cycles_min_cln2, perc_remotion_min] = filter_breathing
     %% Filtering for cycles amplitude
     [~, out_pks_max] = rmoutliers(max_pks, 'movmean', fs*window_time);
     [~, out_pks_min] = rmoutliers(min_pks, 'movmean', fs*window_time);
-    [cycles_max_cln] = clean_breathing_cycles(cycles_max, max_locs, out_pks_max, min_locs, out_pks_min);
-    [cycles_min_cln] = clean_breathing_cycles(cycles_min, min_locs, out_pks_min, max_locs, out_pks_max);
+    [cycles_max_cln] = clean_res_cycles(cycles_max, max_locs, out_pks_max, min_locs, out_pks_min);
+    [cycles_min_cln] = clean_res_cycles(cycles_min, min_locs, out_pks_min, max_locs, out_pks_max);
     
     %% Filtering for cycles length
     [~, out_len_max] = rmoutliers(diff(cycles_max_cln'),'movmean', fs*window_time);

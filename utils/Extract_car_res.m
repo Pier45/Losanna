@@ -2,6 +2,8 @@ close all
 clear
 clc
 
+addpath(genpath('../src'))
+
 %% Loading data and setting of parameters
 % The data are stored in a matrix called "data":
 % data(1,:) -> Raw ECG
@@ -10,7 +12,14 @@ clc
 
 % path = 'C:\Users\piero\OneDrive\Dottorato\Travels\Losanna\Data\Cardio_resp\s21_sleep_cardioresp.mat';
 
-path = '/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/s24/n1/process/';
+path = '/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/s24/n2/process/';
+sleep_stages = ["Awake", "REM", "n1", "n2", "n3"];
+
+fs = 1024;
+RR_window_pks = 20;
+RR_window_len = 20;
+sf_res = 0.5;
+sf_car = 20;
 
 tokens = regexp(path, 'sleep/(s\d+)', 'tokens');
 sub_name = tokens{1}{1};
@@ -18,29 +27,20 @@ sub_name = tokens{1}{1};
 matches = regexp(path, '[\/\\](n\d+)[\/\\]', 'tokens');
 night = matches{end}{1};  % Get the last matching 'nX'
 
-if contains(path, 'mnt')
-    mfile = matfile([path, 'raw_data.mat']);
-    data(1,:) = mfile.y(65,:);
-    data(2,:) = mfile.y(68,:);
-    
-    files = dir(fullfile(path, '*.mat'));
-    match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
-    matched_files = files(match_idx);
-    sleep_labels = load([matched_files.folder '/' matched_files.name]);
-    data(3,:) = sleep_labels.score_labels;
-else
-    load(path)
-end
+load([path, 'raw_data.mat'])
+data(1,:) = y(65,:);
+data(2,:) = y(68,:);
 
-fs = 1024;
+files = dir(fullfile(path, '*.mat'));
+match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
+matched_files = files(match_idx);
+sleep_labels = load([matched_files.folder '/' matched_files.name]);
+data(3,:) = sleep_labels.score_labels;
+
 % Change the number of row in the next variable, if the row are different
 row_ECG = 1;
 row_RES = 2;
 row_SLEEP = 3;
-RR_window_pks = 20;
-RR_window_len = 20;
-sf_res = 0.5;
-sf_car = 20;
 
 %% Initialization
 raw_data = struct();
@@ -107,7 +107,7 @@ if convertCharsToStrings(sub_name) == "s22" && convertCharsToStrings(night) == "
 end
 
 %% Denoising of the ECG and identification of R peaks
-[c_pks0, c_locs0, ~, ~, car.n0.data_cln, car.n0.mean_bpm] = clean_data_find_peaks(sf_car, fs, data(row_ECG, raw_data.n0.idx), 'Awake N0', "cardiac", "plot");
+[c_pks0, c_locs0, ~, ~, car.n0.data_cln, car.n0.mean_bpm] = clean_data_find_peaks(sf_car, fs, data(row_ECG, raw_data.n0.idx), 'Awake', "cardiac", "plot");
 [c_pks1, c_locs1, ~, ~, car.n1.data_cln, car.n1.mean_bpm] = clean_data_find_peaks(sf_car, fs, data(row_ECG, raw_data.n1.idx), 'N1', "cardiac", "plot");
 [c_pks2, c_locs2, ~, ~, car.n2.data_cln, car.n2.mean_bpm] = clean_data_find_peaks(sf_car, fs, data(row_ECG, raw_data.n2.idx), 'N2', "cardiac", "plot");
 [c_pks3, c_locs3, ~, ~, car.n3.data_cln, car.n3.mean_bpm] = clean_data_find_peaks(sf_car, fs, data(row_ECG, raw_data.n3.idx), 'N3', "cardiac", "plot");
@@ -129,7 +129,7 @@ end
 % The respiratory signal is filtered with a low pass filter to remove the
 % noise at 0.5Hz; to identify the mean of the signal another low pass
 % filter at 0.07Hz is applied.
-[res.n0.max_pks, res.n0.max_locs, res.n0.min_pks, res.n0.min_locs, res.n0.data_cln] = clean_data_find_peaks(sf_res, fs, data(row_RES, raw_data.n0.idx), 'Awake N0', "respiration", "plot");
+[res.n0.max_pks, res.n0.max_locs, res.n0.min_pks, res.n0.min_locs, res.n0.data_cln] = clean_data_find_peaks(sf_res, fs, data(row_RES, raw_data.n0.idx), 'Awake', "respiration", "plot");
 [res.n1.max_pks, res.n1.max_locs, res.n1.min_pks, res.n1.min_locs, res.n1.data_cln] = clean_data_find_peaks(sf_res, fs, data(row_RES, raw_data.n1.idx), 'N1', "respiration", "plot");
 [res.n2.max_pks, res.n2.max_locs, res.n2.min_pks, res.n2.min_locs, res.n2.data_cln] = clean_data_find_peaks(sf_res, fs, data(row_RES, raw_data.n2.idx), 'N2', "respiration", "plot");
 [res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, res.n3.data_cln] = clean_data_find_peaks(sf_res, fs, data(row_RES, raw_data.n3.idx), 'N3', "respiration", "plot");
@@ -138,20 +138,20 @@ end
 % boxplot4stages(res.n0.min_locs, res.n1.min_locs, res.n2.min_locs, res.n3.min_locs, res.n4.min_locs, fs)
 
 %% Breathing cycles cleaning from outliers, for both maximum and minimum
-[res.n0.cycles_max, res.n0.cycles_min] = filter_breathing_cycles(res.n0.data_cln, res.n0.max_pks, res.n0.max_locs, res.n0.min_pks, res.n0.min_locs, fs, 'Awake', "plot", ['output/card_resp/BH_' sub_name '_Awake']);
-[res.n1.cycles_max, res.n1.cycles_min] = filter_breathing_cycles(res.n1.data_cln, res.n1.max_pks, res.n1.max_locs, res.n1.min_pks, res.n1.min_locs, fs, 'N1', "plot", 'no');
-[res.n2.cycles_max, res.n2.cycles_min] = filter_breathing_cycles(res.n2.data_cln, res.n2.max_pks, res.n2.max_locs, res.n2.min_pks, res.n2.min_locs, fs, 'N2', "plot", 'no');
-[res.n3.cycles_max, res.n3.cycles_min] = filter_breathing_cycles(res.n3.data_cln, res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, fs, 'N3', "plot", 'no');
-[res.n4.cycles_max, res.n4.cycles_min] = filter_breathing_cycles(res.n4.data_cln, res.n4.max_pks, res.n4.max_locs, res.n4.min_pks, res.n4.min_locs, fs, 'N4', "plot", 'no');
+[res.n0.cycles_max, res.n0.cycles_min] = filter_res_cycles(res.n0.data_cln, res.n0.max_pks, res.n0.max_locs, res.n0.min_pks, res.n0.min_locs, fs, 'Awake', "plot", ['../output/card_resp/BH_' sub_name '_Awake']);
+[res.n1.cycles_max, res.n1.cycles_min] = filter_res_cycles(res.n1.data_cln, res.n1.max_pks, res.n1.max_locs, res.n1.min_pks, res.n1.min_locs, fs, 'N1', "plot", 'no');
+[res.n2.cycles_max, res.n2.cycles_min] = filter_res_cycles(res.n2.data_cln, res.n2.max_pks, res.n2.max_locs, res.n2.min_pks, res.n2.min_locs, fs, 'N2', "plot", 'no');
+[res.n3.cycles_max, res.n3.cycles_min] = filter_res_cycles(res.n3.data_cln, res.n3.max_pks, res.n3.max_locs, res.n3.min_pks, res.n3.min_locs, fs, 'N3', "plot", 'no');
+[res.n4.cycles_max, res.n4.cycles_min] = filter_res_cycles(res.n4.data_cln, res.n4.max_pks, res.n4.max_locs, res.n4.min_pks, res.n4.min_locs, fs, 'N4', "plot", 'no');
 
 %% Plot in polar coordianates the the R peaks signals in a respiratory cycle. 
-f0 = phase_R(res.n0.cycles_min, res.n0.data_cln, car.n0.locs, 0,'N0',"no");
-f1 = phase_R(res.n1.cycles_min, res.n1.data_cln, car.n1.locs, 0,'N1', "no");
-f2 = phase_R(res.n2.cycles_min, res.n2.data_cln, car.n2.locs, 0,'N2', "no");
-f3 = phase_R(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0,'N3', "no");
-f4 = phase_R(res.n4.cycles_min, res.n4.data_cln, car.n4.locs, 0,'N4', "no");
+f.(sleep_stages(1)) = phase_res(res.n0.cycles_min, res.n0.data_cln, car.n0.locs, 0,'N0',"no");
+f.(sleep_stages(2)) = phase_res(res.n1.cycles_min, res.n1.data_cln, car.n1.locs, 0,'N1', "no");
+f.(sleep_stages(3)) = phase_res(res.n2.cycles_min, res.n2.data_cln, car.n2.locs, 0,'N2', "no");
+f.(sleep_stages(4)) = phase_res(res.n3.cycles_min, res.n3.data_cln, car.n3.locs, 0,'N3', "no");
+f.(sleep_stages(5)) = phase_res(res.n4.cycles_min, res.n4.data_cln, car.n4.locs, 0,'N4', "no");
 
-polar_hist_stages(f0,f1,f2,f3,f4, 60, false, '');
+polar_hist_stages(f, 60, '');
 
 %% Save res and car structures in a mat file
-save(['output/card_resp/car_resp_' sub_name '.mat'], 'res', 'car')
+save(['../output/card_resp/car_resp_' sub_name '.mat'], 'res', 'car')
