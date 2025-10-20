@@ -12,7 +12,7 @@ addpath(genpath('../src'))
 
 % path = 'C:\Users\piero\OneDrive\Dottorato\Travels\Losanna\Data\Cardio_resp\s21_sleep_cardioresp.mat';
 
-path = '/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/s24/n2/process/';
+path = '/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/s27/n1/process/';
 sleep_stages = ["Awake", "REM", "n1", "n2", "n3"];
 
 fs = 1024;
@@ -30,6 +30,9 @@ night = matches{end}{1};  % Get the last matching 'nX'
 load([path, 'raw_data.mat'])
 data(1,:) = y(65,:);
 data(2,:) = y(68,:);
+data(4,:) = y(69,:);
+sound = data(4,:);
+[sound_events] = extract_sound_info(sound, true, sub_name, night, "");
 
 files = dir(fullfile(path, '*.mat'));
 match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
@@ -46,7 +49,6 @@ row_SLEEP = 3;
 raw_data = struct();
 res = struct();
 car = struct();
-t = 463040:740229;
 
 raw_data.n0.logic_selection = data(row_SLEEP,:)==0; 
 raw_data.n1.logic_selection = data(row_SLEEP,:)==1; 

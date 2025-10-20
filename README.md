@@ -123,7 +123,8 @@ The toolkit includes utilities for algorithm validation:
 | Script | Purpose |
 |--------|---------|
 | `utils/SimulatedSignal.m` | Generate synthetic CRS data with known synchronization patterns |
-| `utils/CorruptedIdentification.m` | Scan raw data folders for corrupted or incomplete files |
+| `utils/Corrupted_identifier.m` | Scan raw data folders for corrupted or incomplete files |
+| `utils/Create_data.m` | Create a light weight dataset with only ECG and respiration, in data folder |
 | `utils/Extract_car_res.m` | Validate preprocessing on individual subjects |
 | `utils/Extract_sync.m` | Debug synchronization detection algorithms |
 
@@ -137,7 +138,14 @@ losanna/
 ├── 📄 Start_analysis_server.m       # Batch processing entry point
 ├── 📄 Aggregate_analysis.m          # Cross-subject statistical analysis
 │
+├── 📂 config/                       # Physiological recordings
+│   └── config.json/                 # Wakefulness condition data
+│
 ├── 📂 data/                         # Physiological recordings
+│   ├── 📂 awake/                    # Wakefulness condition data
+│   └── 📂 sleep/                    # Sleep condition data (staged)
+│
+├── 📂 output/                       # Physiological recordings
 │   ├── 📂 awake/                    # Wakefulness condition data
 │   └── 📂 sleep/                    # Sleep condition data (staged)
 │
@@ -152,9 +160,9 @@ losanna/
 │   │
 │   ├── 📂 preprocessing/            # Signal cleaning & filtering
 │   │   ├── filter_res_cycles.m      # Respiratory signal filtering
-│   │   ├── filter_R_peaks.m             # ECG R-peak filtering
-│   │   ├── clean_breathing_cycles.m     # Respiratory artifact removal
-│   │   └── clean_data_find_peaks.m      # Peak detection & QC
+│   │   ├── filter_R_peaks.m         # ECG R-peak filtering
+│   │   ├── clean_res_cycles.m       # Respiratory artifact removal
+│   │   └── clean_data_find_peaks.m  # Peak detection & QC
 │   │
 │   └── 📂 graphs/                   # Visualization functions
 │       ├── polar_hist_stages.m      # Phase distribution by sleep stage
@@ -165,6 +173,7 @@ losanna/
 ├── 📂 utils/                        # Development & testing tools
 │   ├── SimulatedSignal.m            # Synthetic data generator
 │   ├── Corrupted_identifier.m       # Data integrity checker
+│   ├── Create_data.m                # Create a reduced dataset with ECG, Resp
 │   ├── Extract_car_res.m            # Preprocessing validation
 │   └── Extract_sync.m               # Synchronization validation
 │
@@ -192,7 +201,6 @@ All analysis scripts read parameters from `config/config.json`:
 {
   "path_folder": "/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/",
   "number_folder": 2,
-  "data_path": "data/sleep",
   "output_dir": "output/",
   
   "conditions": ["sleep", "awake"],
@@ -229,7 +237,6 @@ All analysis scripts read parameters from `config/config.json`:
 |-----------|------|-------------|---------|
 | `path_folder` | string | Absolute path to raw data directory | `"/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/"` |
 | `number_folder` | integer | Number of nested subdirectories in data structure | `2` |
-| `data_path` | string | Relative path to data folder | `"data/sleep"` |
 | `output_dir` | string | Directory for analysis results and figures | `"output/"` |
 
 #### Experimental Conditions
@@ -243,15 +250,10 @@ All analysis scripts read parameters from `config/config.json`:
 | Parameter | Type | Description | Typical Values |
 |-----------|------|-------------|----------------|
 | `combinations` | array | m:n synchronization ratios to test | `["m1n3", "m1n4", "m2n7"]` |
-| `T` | integer | Minimum segment length (in cycles) for synchronization detection | `10-20` |
-| `delta` | integer | Maximum allowed phase deviation (in degrees) for sync classification | `3-10` |
+| `T` | integer | Minimum segment length (in cycles) for synchronization detection | `10-30` |
+| `delta` | integer | Maximum allowed phase deviation (in degrees) for sync classification | `3-7` |
 
 **Synchronization Ratio Notation**: `"m1n3"` → 1 respiratory cycle : 3 R-peaks
-
-**Common Physiological Patterns**:
-- **m1n3**: Typical resting state (20 breaths/min, 60 bpm)
-- **m1n4**: Relaxed breathing (15 breaths/min, 60 bpm)
-- **m2n7**: Deep sleep patterns (~14 breaths/min, 49 bpm)
 
 #### Signal Processing
 | Parameter | Type | Description | Recommended |
@@ -312,15 +314,15 @@ fclose(fid);
 ```json
 "sync_parameters": {
   "combinations": ["m1n2", "m1n5", "m3n10"],
-  "T": 12,
-  "delta": 8
+  "T": 15,
+  "delta": 5
 }
 ```
 
 #### Processing Wake Data Only
 ```json
 "selected_cond": "awake",
-"data_path": "data/awake",
+"path_folder": "data/awake",
 "sleep_stages": ["Awake"]
 ```
 
@@ -338,8 +340,6 @@ fclose(fid);
 1. **Backup Before Editing**: Keep a copy of `config/config_default.json` with standard parameters
 2. **Version Control**: Name configuration files descriptively (e.g., `config_pilot_study.json`, `config_main_analysis.json`)
 3. **Validation**: Test new parameter sets on a single subject using `Extract_sync.m` before batch processing
-4. **Documentation**: Add comments to your configuration files explaining non-standard choices
-5. **Reproducibility**: Archive the exact configuration file used for each publication or report
 
 ### Troubleshooting
 
@@ -348,9 +348,6 @@ fclose(fid);
 
 **Problem**: JSON parsing errors  
 **Solution**: Validate JSON syntax at [jsonlint.com](https://jsonlint.com) before running scripts
-
-**Problem**: Unrealistic synchronization results  
-**Solution**: Verify `fs` matches your data's actual sampling rate, adjust `delta` threshold for stricter/looser detection
 
 ---
 
@@ -407,7 +404,8 @@ For bug reports or technical questions, please open an issue on the repository.
 
 ## 📄 License
 
-License information coming soon.
+This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
+
 
 ---
 
@@ -418,7 +416,7 @@ This project investigates fundamental mechanisms of cardiorespiratory coupling a
 ---
 
 **Last Updated**: October 2025
-**Version**: 4.5.0
+**Version**: 4.5.4
 
 
 

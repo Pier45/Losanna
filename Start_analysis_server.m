@@ -67,6 +67,8 @@ sub_remove = config.subjects_remove;
 combinations = config.sync_parameters.combinations;
 sound_cond = config.sound_cond;
 sound_codes = config.sound_codes;
+sleep_stages = config.sleep_stages;
+sleep_score_codes = config.sleep_score_codes;
 
 d = dir([path_folder '/s*']);
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
@@ -90,18 +92,18 @@ for k = 1:length(d)
             sel_path = [d(k).folder '/' sub_name '/' night '/process/'];
 
             %% Create a folder for the subject
-            path_checks = ['output/sleep/'  sub_name '/' night '/check_plots'];
-            path_save = ['output/sleep/' sub_name '/' night '/'];
+            path_checks = [output_dir 'sleep/'  sub_name '/' night '/check_plots'];
+            path_save = [output_dir 'sleep/' sub_name '/' night '/'];
 
             if not(exist(path_save, 'dir'))
                 status = mkdir(path_save);        
             end
         else
-            path_checks = ['output/awake/'  sub_name '/check_plots'];
-            path_save = ['output/awake/' sub_name '/'];
+            path_checks = [output_dir 'awake/'  sub_name '/check_plots'];
+            path_save = [output_dir 'awake/' sub_name '/'];
             
-            if not(exist(['output/awake/'  sub_name '/'], 'dir'))
-                status = mkdir(['output/awake/'  sub_name '/']);        
+            if not(exist([output_dir 'awake/'  sub_name '/'], 'dir'))
+                status = mkdir([output_dir 'awake/'  sub_name '/']);        
             end
             
             sel_path = [d(k).folder '/' sub_name '/process/'];
@@ -138,27 +140,32 @@ for k = 1:length(d)
             files = dir(fullfile(sel_path, '*.mat')); % Or '*.txt', etc.
             match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
             matched_files = files(match_idx);
+            if isempty(matched_files)
+                error('Error with sleep score file\nThe file should be saved in a file that respect the regex query like: %s', '{sub_name}_allsleep_n{a number}_slscore.mat');
+            end  
             sleep_labels = load([matched_files.folder '/' matched_files.name]);
             score_labels = sleep_labels.score_labels;
         else
             score_labels = zeros(1, length(ecg));
         end
         
-        %% s22 remotion of outliers section
-        if convertCharsToStrings(sub_name) == "s22" && convertCharsToStrings(night) == "n2"
-            ecg_temp = ecg(raw_data.Awake.idx);
-            res_temp = respiration(raw_data.Awake.idx);
-            range_out = 1258520:1693850;
-            new_section = ones(1, length(range_out))*-1667;
-            ecg_temp(range_out) = new_section;
-            res_temp(range_out) = new_section;
-
-            ecg(raw_data.Awake.idx) = ecg_temp;
-            respiration(raw_data.Awake.idx) = res_temp;
-        end
+        %% s22 remotion of outliers section -> now automatic thanks to clean_data_find_peaks
+%         if convertCharsToStrings(sub_name) == "s22" && convertCharsToStrings(night) == "n2"
+%             ecg_temp = ecg(raw_data.Awake.idx);
+%             res_temp = respiration(raw_data.Awake.idx);
+%             range_out = 1258520:1693850;
+%             new_section = ones(1, length(range_out))*-1667;
+%             ecg_temp(range_out) = new_section;
+%             res_temp(range_out) = new_section;
+% 
+%             ecg(raw_data.Awake.idx) = ecg_temp;
+%             respiration(raw_data.Awake.idx) = res_temp;
+%         end
         
         for s =1:length(sleep_stages)
-            raw_data.(sleep_stages{s}).logic_selection = score_labels==0;
+            %% Remember, the possible score lables are 0, 1, 2, 3, 4(REM)
+            raw_data.(sleep_stages{s}).logic_selection = score_labels == sleep_score_codes(s);
+            
             raw_data.(sleep_stages{s}).idx = find(raw_data.(sleep_stages{s}).logic_selection == 1);
             raw_data.(sleep_stages{s}).perc = sum(raw_data.(sleep_stages{s}).logic_selection)/sum(score_labels~=0)*100;
             [c_pks0, c_locs0, ~, ~, car.(sleep_stages{s}).data_cln, car.(sleep_stages{s}).mean_bpm] = clean_data_find_peaks(sf_car, fs, ecg(raw_data.(sleep_stages{s}).idx), sleep_stages{s}, "cardiac", "no");
@@ -224,7 +231,7 @@ for k = 1:length(d)
                 perc_sync_all(i) = result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_perc;
             end
    
-            [sleepTable] = bar_sleep(sleep_stages, sub_name, night, m, n, sound_cond, result.(combinations{c}).sleep_stages, path_save);            
+            [sleepTable] = bar_subplot(sleep_stages, sub_name, night, m, n, sound_cond, result.(combinations{c}).sleep_stages, path_save);            
         end
         %% Save configuration
         result.combinations = combinations;
