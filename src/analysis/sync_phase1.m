@@ -44,28 +44,30 @@ function [theta, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase
 
             open_w = cycles(start_index, 1);
             close_w = cycles(stop_index,2);
+            
+            if close_w > open_w
+                for j=start:length(R_locs)
+                    % Select only the R peaks inside a respiratory cycle, in the
+                    % matrix is inserted the time in seconds.
+                    % if j==38
+                    %     disp('debug j sync1')
+                    % end
 
-            for j=start:length(R_locs)
-                % Select only the R peaks inside a respiratory cycle, in the
-                % matrix is inserted the time in seconds.
-                % if j==38
-                %     disp('debug j sync1')
-                % end
-
-                if R_locs(j) > open_w && R_locs(j) < close_w 
-                    if pos_R <= n
-                        R_res_cycle(i,pos_R) = R_locs(j);
+                    if R_locs(j) > open_w && R_locs(j) < close_w 
+                        if pos_R <= n
+                            R_res_cycle(i,pos_R) = R_locs(j);
+                        else
+                            R_res_cycle(i,:) = 0; % The row is set to 0 because exceed the number of desired R peaks (n)
+                        end
+                        pos_R = pos_R + 1;
                     else
-                        R_res_cycle(i,:) = 0; % The row is set to 0 because exceed the number of desired R peaks (n)
-                    end
-                    pos_R = pos_R + 1;
-                else
-                    if pos_R > 1
-                        % Record the last loc for the R peak so next iteration
-                        % it will stat from that peak, and not iterate from the
-                        % beginning.
-                        start = j;
-                        break
+                        if pos_R > 1
+                            % Record the last loc for the R peak so next iteration
+                            % it will stat from that peak, and not iterate from the
+                            % beginning.
+                            start = j;
+                            break
+                        end
                     end
                 end
             end

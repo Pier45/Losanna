@@ -39,29 +39,29 @@ function bar_subplot(sleep_stages, sub_name, title_info, m, n, sound_cond,sleepT
     subplot(1, 3, 2)
     data_to_plot = table2array(sleepTable(:, end-length(sound_cond)+1:end));  % Last 5 columns
     colors = [
-        0.5 0.5 0.5;  % mustard
-        1.0 0.0 0.0;  % red
-        0.0 0.0 0.0;  % black
-        0.0 0.0 1.0;  % blue
-        0.7 0.7 0.7   % gray
+            0.5 0.5 0.5;  % mustard
+            1.0 0.0 0.0;  % red
+            0.0 0.0 0.0;  % black
+            0.0 0.0 1.0;  % blue
+            0.7 0.7 0.7   % gray
     ];
 
-    bar_single(data_to_plot, title_info, sleep_stages, sound_cond, colors)
+    bar_single(data_to_plot, sleep_stages, sound_cond, colors)
 
     
     %% Sound vs NoSound barplot
     subplot(1, 3, 3)
     colors2 = [
-    0.3922 0.4745 0.2588;  % olive green
-    0.7 0.7 0.7   % slate blue
-    ];
+            0.7 0.7 0.7;   
+            0.392 0.474 0.258  % olive green
+            ];
     
-    sound_group = ["sound", "no sound"];
+    sound_group = ["no sound", "sound"];
     group1 = ["baseline", "nan"];
     group2 = ["sync", "async", "isoc"];
     
     data_to_plot_3 = [sum(table2array(sleepTable(:, group1)),2), sum(table2array(sleepTable(:, group2)),2)];
-    bar_single(data_to_plot_3, title_info, sleep_stages, sound_group, colors2);
+    bar_single(data_to_plot_3, sleep_stages, sound_group, colors2);
     
     %% Save
     if m == 0

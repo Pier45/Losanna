@@ -29,7 +29,7 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
         rem_samples = sum(log_bad_sections);
         
         if rem_samples > 0
-            fprintf('%11s - %5s - Saturation sections - %.3f%% of signal.\n', mode, sleep_stage, rem_samples/length(data)*100);        
+            fprintf('->%15s - %5s - Saturation sections - %.3f%% of signal.\n', mode, sleep_stage, rem_samples/length(data)*100);        
         end
                 
 

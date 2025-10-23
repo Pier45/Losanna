@@ -30,15 +30,15 @@ night = matches{end}{1};  % Get the last matching 'nX'
 load([path, 'raw_data.mat'])
 data(1,:) = y(65,:);
 data(2,:) = y(68,:);
-data(4,:) = y(69,:);
-sound = data(4,:);
-[sound_events] = extract_sound_info(sound, true, sub_name, night, "");
 
 files = dir(fullfile(path, '*.mat'));
 match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
 matched_files = files(match_idx);
 sleep_labels = load([matched_files.folder '/' matched_files.name]);
 data(3,:) = sleep_labels.score_labels;
+
+sound = y(69,:);
+[sound_events] = extract_sound_info(sound, true, sub_name, night, "");
 
 % Change the number of row in the next variable, if the row are different
 row_ECG = 1;

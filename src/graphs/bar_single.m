@@ -1,8 +1,8 @@
-function bar_single(data_to_plot, title_info, sleep_stages, sound_group, colors)
+function bar_single(data_to_plot, sleep_stages, sound_group, colors)
     
     b = bar(data_to_plot);
 
-    if convertCharsToStrings(title_info) == "Awake"
+    if size(sleep_stages, 1) == 1 %convertCharsToStrings(title_info) == "Awake"
         set(gca, 'XTickLabel', sound_group);
         ylabel('Sync % in each sound event');
         

@@ -46,14 +46,20 @@ str = char(raw');
 fclose(fid);
 config = jsondecode(str);
 
-%path_folder = ['/mnt/HDD2/CardioAudio_sleepbiotech/piero/Losanna/data/', selected_cond];
-% path_folder = ['/mnt/HDD2/CardioAudio_sleepbiotech/data/', selected_cond];
-
 %% Settable parameters
-path_folder = config.path_folder;
-output_dir = config.output_dir;
-selected_cond = config.selected_cond;
+path_folder = config.essential.path_folder;
+output_dir = config.essential.output_dir;
+log_dir = config.essential.log_dir;
+selected_cond = config.essential.selected_cond;
+sub_remove = config.essential.subjects_remove;
+
 number_folder = config.number_folder;
+sleep_stages = config.sleep_stages;
+% Contoll for the awake session
+if selected_cond == "awake"
+    number_folder = 1;
+    sleep_stages = "Awake";
+end
 
 fs = config.fs;
 T = config.sync_parameters.T;
@@ -63,51 +69,61 @@ RR_window_len = config.filters_parameter.RR_window_len;
 sf_res = config.filters_parameter.sf_res;
 sf_car = config.filters_parameter.sf_car;
 
-sub_remove = config.subjects_remove;
 combinations = config.sync_parameters.combinations;
 sound_cond = config.sound_cond;
 sound_codes = config.sound_codes;
-sleep_stages = config.sleep_stages;
 sleep_score_codes = config.sleep_score_codes;
 
-d = dir([path_folder '/s*']);
+d = dir([path_folder selected_cond '/s*']);
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
 d = d(is_match, :);
 for sub=1:length(sub_remove)
     d(strcmp({d.name}, sub_remove{sub})) = [];
 end
 
+if not(exist(log_dir, 'dir'))
+    mkdir(log_dir)
+end
+
+t = datetime;
+DateString = datestr(t); 
+log_file_name = ['analyis_log_' DateString '.txt'];
+diary([log_dir log_file_name]);
+diary on
+
+name_folder_T = [selected_cond '/T' num2str(T) '/'];
 for k = 1:length(d)
-        
-    if k==2
-        disp('test')
-    end
     
     sub_name = d(k).name;
+    fprintf('Start analysis %3s\n', sub_name);
+
+    if string(sub_name) == "s10"
+        disp('')
+    end
     
     tstart = tic;
     for j = 1:number_folder
         if number_folder > 1
             night = ['n' num2str(j)];
-            sel_path = [d(k).folder '/' sub_name '/' night '/process/'];
+            sel_path = [d(k).folder '/' sub_name '/' night '/'];
 
             %% Create a folder for the subject
-            path_checks = [output_dir 'sleep/'  sub_name '/' night '/check_plots'];
-            path_save = [output_dir 'sleep/' sub_name '/' night '/'];
+            path_checks = [output_dir name_folder_T  sub_name '/' night '/check_plots'];
+            path_save = [output_dir name_folder_T sub_name '/' night '/'];
 
             if not(exist(path_save, 'dir'))
                 status = mkdir(path_save);        
             end
         else
-            path_checks = [output_dir 'awake/'  sub_name '/check_plots'];
-            path_save = [output_dir 'awake/' sub_name '/'];
+            path_checks = [output_dir name_folder_T  sub_name '/check_plots'];
+            path_save = [output_dir name_folder_T sub_name '/'];
             
-            if not(exist([output_dir 'awake/'  sub_name '/'], 'dir'))
-                status = mkdir([output_dir 'awake/'  sub_name '/']);        
+            if not(exist([output_dir name_folder_T  sub_name '/'], 'dir'))
+                status = mkdir([output_dir name_folder_T  sub_name '/']);        
             end
             
-            sel_path = [d(k).folder '/' sub_name '/process/'];
-            night = 'n0';
+            sel_path = [d(k).folder '/' sub_name '/'];
+            night = "Awake";
         end
 
         if not(exist(path_checks, 'dir'))
@@ -115,40 +131,45 @@ for k = 1:length(d)
         end
             
         raw_data_path = [sel_path 'raw_data.mat'];
-                
-        if not(contains(path_folder, 'piero'))
-            %% Loading in this way is faster x5 respect to single or full load
-            mfile = matfile(raw_data_path);
-            data = mfile.y(65:69,:);
-            ecg = data(1,:);
-            respiration = data(4,:);
-            sound = data(5,:);
-        else
-            load(raw_data_path)
-        end
+        load(raw_data_path)
+        
+        ecg = data.ecg;
+        respiration = data.res;
+        sound = data.trg;
+%         if not(contains(path_folder, 'piero'))
+%             %% Loading in this way is faster x5 respect to single or full load
+%             mfile = matfile(raw_data_path);
+%             data = mfile.y(65:69,:);
+%             ecg = data(1,:);
+%             respiration = data(4,:);
+%             sound = data(5,:);
+%         else
+%             load(raw_data_path)
+%         end
         
         raw_data = struct();
         car = struct();
         res = struct();
         f = struct();
         
-        %% Extraction of sound event
-        [sound_events] = extract_sound_info(sound, true, sub_name, night, [path_save 'check_plots']);
-
         % Load the sleep stages
         if convertCharsToStrings(selected_cond) == "sleep"
-            files = dir(fullfile(sel_path, '*.mat')); % Or '*.txt', etc.
-            match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
-            matched_files = files(match_idx);
-            if isempty(matched_files)
-                error('Error with sleep score file\nThe file should be saved in a file that respect the regex query like: %s', '{sub_name}_allsleep_n{a number}_slscore.mat');
-            end  
-            sleep_labels = load([matched_files.folder '/' matched_files.name]);
-            score_labels = sleep_labels.score_labels;
+%             files = dir(fullfile(sel_path, '*.mat')); % Or '*.txt', etc.
+%             match_idx = ~cellfun(@isempty, regexp({files.name}, ['^' sub_name '_allsleep_n\d+_slscore.mat$']));
+%             matched_files = files(match_idx);
+%             if isempty(matched_files)
+%                 error('Error with sleep score file\nThe file should be saved in a file that respect the regex query like: %s', '{sub_name}_allsleep_n{a number}_slscore.mat');
+%             end  
+%             sleep_labels = load([matched_files.folder '/' matched_files.name]);
+%             score_labels = sleep_labels.score_labels;
+            score_labels = data.scr;
         else
             score_labels = zeros(1, length(ecg));
         end
         
+        %% Extraction of sound event
+        [sound_events] = extract_sound_info(sound, score_labels, sub_name, night, true, [path_save 'check_plots']);
+
         %% s22 remotion of outliers section -> now automatic thanks to clean_data_find_peaks
 %         if convertCharsToStrings(sub_name) == "s22" && convertCharsToStrings(night) == "n2"
 %             ecg_temp = ecg(raw_data.Awake.idx);
@@ -192,12 +213,15 @@ for k = 1:length(d)
                 data = res.(sleep_stages{i}).data_cln;
 
                 [phase, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase1(cycles, R_locs, data, T, m, n, fs);
-                [perc_sync, sync_cycle]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages{i}, false);
+                [perc_sync, sync_cycle, sync_samples, tot_samples]= sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stages{i}, false);
                 sound_event_table = sync_phase3(m_cycle, sync_cycle, sound_events);
                 
                 %% Save sleep stage data output
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_perc = perc_sync;
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_cycle = sync_cycle; 
+                result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_samples = sync_samples;
+                result.(combinations{c}).sleep_stages.(sleep_stages{i}).tot_samples = tot_samples;
+                
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).m_cycle = m_cycle;
                 result.(combinations{c}).sleep_stages.(sleep_stages{i}).cycle = cycles;
                 %% Perctentage outliers
@@ -230,8 +254,9 @@ for k = 1:length(d)
             for i = 1:length(sleep_stages)
                 perc_sync_all(i) = result.(combinations{c}).sleep_stages.(sleep_stages{i}).sync_perc;
             end
-   
-            [sleepTable] = bar_subplot(sleep_stages, sub_name, night, m, n, sound_cond, result.(combinations{c}).sleep_stages, path_save);            
+            
+            [sleepTable] = table_summary(sleep_stages, sound_cond, result.(combinations{c}).sleep_stages);
+            bar_subplot(sleep_stages, sub_name, night, m, n, sound_cond, sleepTable, path_save);  
         end
         %% Save configuration
         result.combinations = combinations;
@@ -249,9 +274,16 @@ for k = 1:length(d)
  
     end
     time_sub = toc(tstart);
-    fprintf('Progress: %6.2f%%   -   completed sub =%4s   -   time = %8.1fs\n', round((k/length(d))*100,2), sub_name, time_sub);
+%     fprintf('->%15s - %6.2f%%   -   sub =%3s   -  time = %8.1fs\n','Completed', round((k/length(d))*100,2), sub_name, time_sub);
+    
+    bar_length = 64;  % Total length of the bar
+    perc_comp = round((k/length(d))*100,2);
+    filled = round((perc_comp/100) * bar_length);
+    barra = ['[' repmat('=', 1, filled) repmat(' ', 1, bar_length-filled) ']'];    
+    fprintf('%s %6.2f%%            time %s analysis = %8.1fs\n', barra, perc_comp, sub_name, time_sub);
 end
 
+diary off
 
 % % Load the file to see structure
 % m = matfile('/home/piero/Desktop/sa/corrupted_raw_data.mat');

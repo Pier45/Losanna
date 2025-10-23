@@ -1,10 +1,13 @@
-function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, graph)
+function [perc_sync, sync_cycle, sync_samples, total_samples_filtered] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, graph)
 % SYNC_PHASE2 compute the percentage of synchronized cycles under the threshold.
     
-    if m_cycle ~= 0
+    if not(isempty(m_cycle))
         %% Threshold formula.
         th = (2*pi*m)/(n*delta);
-
+        
+        zero_test = m_cycle(:,2);
+        m_cycle(zero_test == 0) = [];
+        
         total_samples_filtered = sum(diff(m_cycle'));%length(phase);
 
         % Average of the std values computed on windows of 30 seconds.
@@ -61,6 +64,8 @@ function [perc_sync, sync_cycle] = sync_phase2(m_cycle, phase, R_locs, std_w, sa
     else
         perc_sync = 0;
         sync_cycle = [];
+        sync_samples = 0;
+        total_samples_filtered = 0;
     end
 end
 

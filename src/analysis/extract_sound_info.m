@@ -1,4 +1,4 @@
-function [sound_events] = extract_sound_info(sound, save_plot, sub_name, night, save_path)
+function [sound_events] = extract_sound_info(sound, sleep_score, sub_name, night, save_plot, save_path)
 %%  EXTRACT_SOUND_INFO 
 %   Extracts various synchronization points from the input sound data.
 %   The function takes a vector 'sound' as input and returns a structure 'sound_events' 

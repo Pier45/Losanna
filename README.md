@@ -118,15 +118,38 @@ Aggregate_analysis
 
 ### Testing & Validation
 
-The toolkit includes utilities for algorithm validation:
+The `utils/` folder provides comprehensive tools for development, testing, and data quality assurance:
 
-| Script | Purpose |
-|--------|---------|
-| `utils/SimulatedSignal.m` | Generate synthetic CRS data with known synchronization patterns |
-| `utils/Corrupted_identifier.m` | Scan raw data folders for corrupted or incomplete files |
-| `utils/Create_data.m` | Create a light weight dataset with only ECG and respiration, in data folder |
-| `utils/Extract_car_res.m` | Validate preprocessing on individual subjects |
-| `utils/Extract_sync.m` | Debug synchronization detection algorithms |
+#### Data Generation & Simulation
+| Script | Purpose | Use Case |
+|--------|---------|----------|
+| `SimulatedSignal.m` | Generate synthetic cardiorespiratory signals with controlled synchronization patterns | Algorithm validation with known ground truth |
+| `create_raw_data.m` | Create raw synthetic data files mimicking experimental format | Pipeline testing without real subject data |
+| `Create_data.m` | Extract lightweight datasets containing only ECG and respiration channels | Reduce data size for development/sharing |
+
+#### Data Loading & Import
+| Script | Purpose | Format |
+|--------|---------|--------|
+| `Load_single_raw_data.m` | Load and inspect individual subject recordings | MATLAB `.mat` files |
+| `load_xdf.m` | Import Lab Streaming Layer (LSL) recordings | `.xdf` format |
+| `load_xdf_innerloop.mexa64` | Compiled MEX function for accelerated XDF parsing | Binary (Linux x64) |
+
+> **Note**: `load_xdf_innerloop.mexa64` is compiled for Linux 64-bit systems. If running on Windows or macOS, you may need to recompile from source or use the pure MATLAB fallback in `load_xdf.m`.
+
+#### Quality Control & Debugging
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `Correpted_identifier.m` | Scan data directories for corrupted, incomplete, or malformed files | Before batch processing to identify problematic recordings |
+| `Extract_car_res.m` | Validate preprocessing pipeline on individual subjects with visual feedback | Debug filtering, peak detection, or artifact removal |
+| `Extract_sync.m` | Test synchronization detection algorithms with detailed diagnostic plots | Verify m:n ratio detection, phase calculations, or threshold settings |
+
+#### Typical Development Workflow
+
+1. **Generate Test Data**: Use `SimulatedSignal.m` to create signals with known synchronization properties
+2. **Validate Algorithms**: Run `Extract_sync.m` on simulated data to verify detection accuracy
+3. **Check Real Data**: Use `Correpted_identifier.m` to scan for issues before processing
+4. **Debug Individual Cases**: Apply `Extract_car_res.m` to subjects showing unexpected results
+5. **Create Reduced Datasets**: Use `Create_data.m` to share data subsets with collaborators
 
 ---
 
@@ -137,17 +160,22 @@ losanna/
 │
 ├── 📄 Start_analysis_server.m       # Batch processing entry point
 ├── 📄 Aggregate_analysis.m          # Cross-subject statistical analysis
+├── 📄 LICENSE                       # Apache 2.0 license file
+├── 📄 README.md                     # This documentation file
 │
-├── 📂 config/                       # Physiological recordings
-│   └── config.json/                 # Wakefulness condition data
+├── 📂 config/                       # Configuration files
+│   └── config.json                  # Central JSON configuration for all parameters
 │
 ├── 📂 data/                         # Physiological recordings
 │   ├── 📂 awake/                    # Wakefulness condition data
 │   └── 📂 sleep/                    # Sleep condition data (staged)
 │
-├── 📂 output/                       # Physiological recordings
-│   ├── 📂 awake/                    # Wakefulness condition data
-│   └── 📂 sleep/                    # Sleep condition data (staged)
+├── 📂 log/                          # Log folder
+│   └── analysis_log.txt            # Log of the Start_analysis_server.m script
+│
+├── 📂 output/                       # Output folder
+│   ├── 📂 awake/                    # Wakefulness condition output
+│   └── 📂 sleep/                    # Sleep condition output
 │
 ├── 📂 src/                          # Core algorithms
 │   ├── 📂 analysis/                 # Synchronization & phase analysis
@@ -156,7 +184,8 @@ losanna/
 │   │   ├── sync_phase1.m            # Extract possible windows of sync
 │   │   ├── sync_phase2.m            # Compute the percentage of sync cycles
 │   │   ├── sync_phase3.m            # Auditory event sync cycle stratification
-│   │   └── extract_sound_info.m     # Auditory event parsing
+│   │   ├── extract_sound_info.m     # Auditory event parsing
+│   │   └── table_summary.m          # Generate summary statistics tables
 │   │
 │   ├── 📂 preprocessing/            # Signal cleaning & filtering
 │   │   ├── filter_res_cycles.m      # Respiratory signal filtering
@@ -167,15 +196,21 @@ losanna/
 │   └── 📂 graphs/                   # Visualization functions
 │       ├── polar_hist_stages.m      # Phase distribution by sleep stage
 │       ├── boxplot4stages.m         # Multi-stage boxplot comparisons
-│       ├── bar_sleep.m              # Bar charts for sleep metrics
+│       ├── bar_sleep.m~             # Backup/temporary file (exclude from version control)
+│       ├── bar_single.m             # Single condition bar charts
+│       ├── bar_subplot.m            # Multi-panel bar chart layouts
 │       └── draw_xregion.m           # Custom shaded regions (2019a compatible)
 │
 ├── 📂 utils/                        # Development & testing tools
 │   ├── SimulatedSignal.m            # Synthetic data generator
-│   ├── Corrupted_identifier.m       # Data integrity checker
+│   ├── Correpted_identifier.m       # Data integrity checker (typo in filename)
 │   ├── Create_data.m                # Create a reduced dataset with ECG, Resp
+│   ├── create_raw_data.m            # Generate raw synthetic data files
 │   ├── Extract_car_res.m            # Preprocessing validation
-│   └── Extract_sync.m               # Synchronization validation
+│   ├── Extract_sync.m               # Synchronization validation
+│   ├── Load_single_raw_data.m       # Load individual raw data files
+│   ├── load_xdf.m                   # XDF file format loader (Lab Streaming Layer)
+│   └── load_xdf_innerloop.mexa64    # Compiled MEX function for XDF parsing
 │
 └── 📂 docs/                         # Documentation
     └── DATASET report               # Dataset specification & metadata
@@ -199,15 +234,19 @@ All analysis scripts read parameters from `config/config.json`:
 
 ```json
 {
-  "path_folder": "/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/",
-  "number_folder": 2,
-  "output_dir": "output/",
+  "essential": { 
+    "path_folder": "/mnt/HDD2/piero/Losanna/data/",
+    "output_dir": "output/",
+    "log_dir": "log/",
+    "selected_cond": "sleep",
+    "subjects_remove": ["s31"]
+  },
   
   "conditions": ["sleep", "awake"],
-  "selected_cond": "sleep",
+  "number_folder": 2,
   
-  "sync_parameters": {
-    "combinations": ["m1n2", "m1n3", "m1n4", "m1n5", "m1n6", "m2n5", "m2n7"],
+  "sync_parameters": {  
+    "combinations": ["m1n2", "m1n3", "m1n4", "m1n5", "m1n6", "m2n5", "m2n7"],  
     "T": 15,
     "delta": 5
   },
@@ -224,27 +263,31 @@ All analysis scripts read parameters from `config/config.json`:
   "sound_cond": ["nan", "sync", "async", "isoc", "baseline"],
   "sound_codes": [0, 96, 160, 128, 192],
   
-  "sleep_stages": ["Awake", "REM", "n1", "n2", "n3"],
-  
-  "subjects_remove": ["s31", "s32"]
+  "sleep_stages": ["Awake", "N1", "N2", "N3", "REM"],
+  "sleep_score_codes": [0, 1, 2, 3, 4]
 }
 ```
 
 ### Parameter Reference
 
+#### Essential Configuration
+The `essential` object contains core parameters that must be set for the pipeline to run:
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `path_folder` | string | Absolute path to raw data directory | `"/mnt/HDD2/piero/Losanna/data/"` |
+| `output_dir` | string | Directory for analysis results and figures | `"output/"` |
+| `log_dir` | string | Directory for analysis logs and processing reports | `"log/"` |
+| `selected_cond` | string | Active condition for current analysis | `"sleep"` |
+| `subjects_remove` | array | Subject IDs to exclude from batch processing | `["s31"]` |
+
 #### Dataset Configuration
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
-| `path_folder` | string | Absolute path to raw data directory | `"/mnt/HDD2/CardioAudio_sleepbiotech/data/sleep/"` |
-| `number_folder` | integer | Number of nested subdirectories in data structure | `2` |
-| `output_dir` | string | Directory for analysis results and figures | `"output/"` |
-
-#### Experimental Conditions
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
 | `conditions` | array | Available experimental conditions | `["sleep", "awake"]` |
-| `selected_cond` | string | Active condition for current analysis | `"sleep"` |
-| `sleep_stages` | array | Sleep stage labels for classification | `["Awake", "REM", "n1", "n2", "n3"]` |
+| `number_folder` | integer | Number of nested subdirectories in data structure | `2` |
+| `sleep_stages` | array | Sleep stage labels for classification | `["Awake", "N1", "N2", "N3", "REM"]` |
+| `sleep_score_codes` | array | Numerical codes corresponding to sleep stages | `[0, 1, 2, 3, 4]` |
 
 #### Synchronization Detection
 | Parameter | Type | Description | Typical Values |
@@ -289,16 +332,21 @@ All analysis scripts read parameters from `config/config.json`:
 % Read configuration file
 config = jsondecode(fileread('config/config.json'));
 
-% Access parameters
+% Access essential parameters
+path_folder = config.essential.path_folder;
+output_dir = config.essential.output_dir;
+selected_cond = config.essential.selected_cond;
+
+% Access other parameters
 fs = config.fs;
 sync_combos = config.sync_parameters.combinations;
-output_path = config.output_dir;
 ```
 
 #### Modifying Parameters Programmatically
 ```matlab
 % Update configuration for different analysis
-config.selected_cond = 'awake';
+config.essential.selected_cond = 'awake';
+config.essential.path_folder = '/mnt/HDD2/piero/Losanna/data/';
 config.sync_parameters.T = 20;  % Increase minimum segment length
 
 % Save modified configuration
@@ -321,9 +369,16 @@ fclose(fid);
 
 #### Processing Wake Data Only
 ```json
-"selected_cond": "awake",
-"path_folder": "data/awake",
-"sleep_stages": ["Awake"]
+{
+  "essential": {
+    "selected_cond": "awake",
+    "path_folder": "/mnt/HDD2/piero/Losanna/data/",
+    "output_dir": "output/",
+    "log_dir": "log/",
+    "subjects_remove": []
+  },
+  "sleep_stages": ["Awake"]
+}
 ```
 
 #### Strict Synchronization Criteria
@@ -416,7 +471,7 @@ This project investigates fundamental mechanisms of cardiorespiratory coupling a
 ---
 
 **Last Updated**: October 2025
-**Version**: 4.5.4
+**Version**: 4.5.5
 
 
 

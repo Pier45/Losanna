@@ -6,7 +6,7 @@ addpath(genpath('src'))
 
 %% Select the folder, 1 sleep, 2 awake
 conditions = ["sleepT30"; "awake"];
-selected_cond = char(conditions(1,:));
+selected_cond = char(conditions(2,:));
 
 path_folder = ['output/', selected_cond];
 d = dir([path_folder '/s*']);
@@ -26,8 +26,6 @@ end
 %% s31 at the moment has only one night
 d(strcmp({d.name}, 's31')) = [];
 %%
-d(strcmp({d.name}, 's12')) = [];
-d(strcmp({d.name}, 's13')) = [];
 
 sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
 sound_codes = [0, 96, 160, 128, 192];
@@ -39,6 +37,10 @@ combinations = result.combinations;
 agg_result = struct();
 for k = 1:length(d)
     sub_name = d(k).name;
+    
+    if string(sub_name) == "s29"
+        disp('')
+    end
 
     for j = 1:number_folder
         if number_folder > 1
@@ -46,18 +48,18 @@ for k = 1:length(d)
             sel_path = [d(k).folder '/' sub_name '/' night '/'];
 
             %% Create a folder for the subject
-            path_checks = ['output/sleepT30/'  sub_name '/' night '/check_plots'];
-            path_save = ['output/sleepT30/' sub_name '/' night '/'];
+            path_checks = ['output/' selected_cond '/'  sub_name '/' night '/check_plots'];
+            path_save = ['output/' selected_cond '/' sub_name '/' night '/'];
 
             if not(exist(path_save, 'dir'))
                 status = mkdir(path_save);        
             end
         else
-            path_checks = ['output/awake/'  sub_name '/check_plots'];
-            path_save = ['output/awake/' sub_name '/'];
+            path_checks = ['output/' selected_cond '/'  sub_name '/check_plots'];
+            path_save = ['output/'  selected_cond '/' sub_name '/'];
             
-            if not(exist(['output/awake/'  sub_name '/'], 'dir'))
-                status = mkdir(['output/awake/'  sub_name '/']);        
+            if not(exist(['output/'  selected_cond '/'  sub_name '/'], 'dir'))
+                status = mkdir(['output/'  selected_cond '/'  sub_name '/']);        
             end
             
             sel_path = [d(k).folder '/' sub_name '/'];
@@ -148,8 +150,11 @@ for k = 1:length(d)
 
         end
     end
-    bar_subplot(sleep_stages, sub_name, 'cumulated', 0, 0, sound_cond, agg_result.(sub_name).general_table, path_save(1:end-3)); 
-
+    
+    if any(contains(fieldnames(agg_result), sub_name)) && number_folder > 1
+        bar_subplot(sleep_stages, sub_name, 'cumulated', 0, 0, sound_cond, agg_result.(sub_name).general_table, path_save(1:end-3)); 
+    end
+    
     fprintf('Progress: %6.2f%%   -   sub =%4s\n', round((k/length(d))*100,2), sub_name);
 end
 
