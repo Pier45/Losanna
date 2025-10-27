@@ -18,6 +18,8 @@ function [theta, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase
 %         (at the moment unused).
 % std_w = std value of the angle for each respiratory cycle in the window.
 % saved_windows = saved windows that respect the selection criteria.
+% m_cycle = matrix of 2 column, first start the second end, if no brething
+%           cycle available is a empty vector []
 
     n_row = round(size(cycles, 1)/m);
     % Define cycles end before padding
@@ -146,7 +148,7 @@ function [theta, R_res_cycle, avg_w, std_w, saved_windows, m_cycle] = sync_phase
         avg_w=0;
         std_w=0;
         saved_windows=0;
-        m_cycle=0;
+        m_cycle=[];
     end
     
 end

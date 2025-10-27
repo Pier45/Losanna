@@ -1,10 +1,18 @@
-function bar_single(data_to_plot, sleep_stages, sound_group, colors)
+function bar_single(data_to_plot, sleep_stages, sound_group, ylab,colors)
     
     b = bar(data_to_plot);
 
-    if size(sleep_stages, 1) == 1 %convertCharsToStrings(title_info) == "Awake"
-        set(gca, 'XTickLabel', sound_group);
-        ylabel('Sync % in each sound event');
+    if size(sleep_stages, 1) == 1
+        label_new = cell(size(sound_group, 1),1);
+        for l=1:size(sound_group, 1)
+            if length(sound_group{l}) > 5 && not(contains(sound_group{l}, 'sound'))
+                label_new{l} = sound_group{l}(1:4);
+            else
+                label_new{l} = sound_group{l};
+            end
+        end
+        set(gca, 'XTickLabel', label_new);
+        ylabel(ylab);
         
         b.FaceColor = 'flat';  % Enable individual bar coloring
 
@@ -16,7 +24,7 @@ function bar_single(data_to_plot, sleep_stages, sound_group, colors)
     else
         set(gca, 'XTickLabel', sleep_stages);
         xlabel('Sleep Stage');
-        ylabel('Sync % in each sound event');
+        ylabel(ylab);
         
         for i = 1:length(b)
             b(i).FaceColor = colors(i, :);

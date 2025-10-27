@@ -3,10 +3,10 @@ close all
 clc
 
 %% Inital definitions
-subj=17; %subject number
-consc_sel=1; %1=awake; 2=sleep
+subj=28; %subject number
+consc_sel=2; %1=awake; 2=sleep
 consc_label = ['awake'; 'sleep'];
-sleep_night=2; %1=day1 sleep; 2=day2 sleep
+sleep_night=1; %1=day1 sleep; 2=day2 sleep
 
 % path_xdf = '/mnt/filearc_eeg/CardioAudio_sleepbiotech/raw_data';
 path_xdf = '/mnt/HDD2/piero';

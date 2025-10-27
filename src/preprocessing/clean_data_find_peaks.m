@@ -18,7 +18,7 @@ function [pks, locs, pks_min, locs_min, clear_data, mean_bpm] = clean_data_find_
     if not(isempty(data))
         
         %% Check for saturation sections    
-        th_bad_section = 5;        
+        th_bad_section = 7;        
         N = fs;  % 1sec Number of samples to expand (left and right) bad areas
         std_data = std(data);
         mov_mean = movmedian(data, fs*45);

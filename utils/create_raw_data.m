@@ -30,7 +30,7 @@ function create_raw_data(filename_xdf, path_sleep, subj_dir_out, subj, sleep_nig
         data.scr = score_labels;
         
         if length(data.scr) ~= control_len
-            warning(['Problems of length - ' num2str(subj)])
+            warning(['Problems of length! - ' num2str(subj)])
         end
     end
     

@@ -31,7 +31,7 @@ function [sleepTable] = table_summary(sleep_stages, sound_cond, prov_struct)
 
     for slstage=1:length(sleep_stages)
         if any(ismember(fieldnames(prov_struct), sleep_stages{slstage})) && not(isempty(prov_struct.(sleep_stages{slstage}).sound_table))
-            sleepTable{slstage, sound_cond} = prov_struct.(sleep_stages{slstage}).sound_table.Percentage';
+            sleepTable{slstage, sound_cond} = prov_struct.(sleep_stages{slstage}).sound_table.Percentage;%% trasposto-testare
         end
     end
         

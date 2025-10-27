@@ -5,7 +5,7 @@ clc
 addpath(genpath('src'))
 
 %% Select the folder, 1 sleep, 2 awake
-conditions = ["sleepT30"; "awake"];
+conditions = ["sleep/T30"; "awake/T15"];
 selected_cond = char(conditions(2,:));
 
 path_folder = ['output/', selected_cond];

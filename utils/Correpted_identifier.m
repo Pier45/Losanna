@@ -57,3 +57,24 @@ for k = 1:length(d)
     fprintf('Progress: %6.2f%%   -   completed sub =%4s   -   time = %8.1fs\n', round((k/length(d))*100,2), sub_name, time_sub);
 end
 
+
+% % Load the file to see structure
+% m = matfile('/home/piero/Desktop/sa/corrupted_raw_data.mat');
+% 
+% % Test each column
+% bad_cols = [];
+% for i = 1700000:2100000
+%     try
+%         temp = m.y(69, i);  % Try to read column i
+%         if mod(i, 1000) == 0
+%             fprintf('Column %d: OK\n', i);
+%         end
+%     catch ME
+%         fprintf('Column %d: CORRUPTED - %s\n', i, ME.message);
+%         bad_cols = [bad_cols, i];
+%     end
+% end
+% 
+% fprintf('\nCorrupted columns: ');
+% disp(bad_cols);
+

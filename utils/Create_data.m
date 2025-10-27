@@ -31,6 +31,12 @@ else
     n_sub = size(day(1).fileid,1);
 end
 
+t = datetime;
+DateString = char(t, "yyyy-MMM-dd_HH:mm:ss"); 
+log_file_name = ['creation_dataset_log_' consc_label(consc_sel) '_' DateString '.txt'];
+diary([log_dir log_file_name]);
+diary on
+
 %% Start Creation
 for k = 1:n_sub
     sub_name = ['s' num2str(k)];
@@ -66,3 +72,4 @@ for k = 1:n_sub
 %     fprintf('Progress:\n\r%s %3.0f%%\n', progressBar, percentDone*100);
 end
 
+diary off

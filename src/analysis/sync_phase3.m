@@ -5,12 +5,9 @@ function [sound_table] = sync_phase3(new_cycles, sync_cycles, sound_events)
     
     %% Initialization
     sound_table = table();
-    sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
-    sound_codes = [0, 96, 160, 128, 192];
     
     if not(isempty(sync_cycles))
 
-        
         logic_selection = false(length(sound_events.vector), 1);
         sel_cycle = new_cycles(sync_cycles, :);
 
@@ -20,12 +17,12 @@ function [sound_table] = sync_phase3(new_cycles, sync_cycles, sound_events)
         
         sound_sel = sound_events.vector(logic_selection);
         if not(isempty(sound_sel))
-            counts = zeros(size(sound_codes));
-            for g = 1:length(sound_codes)
-                counts(g) = sum(sound_sel == sound_codes(g));
+            counts = zeros(size(sound_events.sound_codes));
+            for g = 1:length(sound_events.sound_codes)
+                counts(g) = sum(sound_sel == sound_events.sound_codes(g));
             end
             percentages = (counts / length(sound_sel)) * 100;
-            sound_table = table(sound_codes', sound_cond', counts', percentages', 'VariableNames', {'Code', 'Condition', 'Count', 'Percentage'});
+            sound_table = table(sound_events.sound_codes', sound_events.sound_cond', counts', percentages', 'VariableNames', {'Code', 'Condition', 'Count', 'Percentage'});
         end
     end
 end

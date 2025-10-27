@@ -124,15 +124,15 @@ The `utils/` folder provides comprehensive tools for development, testing, and d
 | Script | Purpose | Use Case |
 |--------|---------|----------|
 | `SimulatedSignal.m` | Generate synthetic cardiorespiratory signals with controlled synchronization patterns | Algorithm validation with known ground truth |
-| `create_raw_data.m` | Create raw synthetic data files mimicking experimental format | Pipeline testing without real subject data |
 | `Create_data.m` | Extract lightweight datasets containing only ECG and respiration channels | Reduce data size for development/sharing |
 
 #### Data Loading & Import
 | Script | Purpose | Format |
 |--------|---------|--------|
-| `Load_single_raw_data.m` | Load and inspect individual subject recordings | MATLAB `.mat` files |
+| `Load_single_raw_data.m` | Load and inspect individual subject recordings | `.xdf` files |
 | `load_xdf.m` | Import Lab Streaming Layer (LSL) recordings | `.xdf` format |
 | `load_xdf_innerloop.mexa64` | Compiled MEX function for accelerated XDF parsing | Binary (Linux x64) |
+| `create_raw_data.m` | Function for the dataset creation, and managing special subject like 17 | For the Create_data script |
 
 > **Note**: `load_xdf_innerloop.mexa64` is compiled for Linux 64-bit systems. If running on Windows or macOS, you may need to recompile from source or use the pure MATLAB fallback in `load_xdf.m`.
 
@@ -142,14 +142,6 @@ The `utils/` folder provides comprehensive tools for development, testing, and d
 | `Correpted_identifier.m` | Scan data directories for corrupted, incomplete, or malformed files | Before batch processing to identify problematic recordings |
 | `Extract_car_res.m` | Validate preprocessing pipeline on individual subjects with visual feedback | Debug filtering, peak detection, or artifact removal |
 | `Extract_sync.m` | Test synchronization detection algorithms with detailed diagnostic plots | Verify m:n ratio detection, phase calculations, or threshold settings |
-
-#### Typical Development Workflow
-
-1. **Generate Test Data**: Use `SimulatedSignal.m` to create signals with known synchronization properties
-2. **Validate Algorithms**: Run `Extract_sync.m` on simulated data to verify detection accuracy
-3. **Check Real Data**: Use `Correpted_identifier.m` to scan for issues before processing
-4. **Debug Individual Cases**: Apply `Extract_car_res.m` to subjects showing unexpected results
-5. **Create Reduced Datasets**: Use `Create_data.m` to share data subsets with collaborators
 
 ---
 
@@ -315,7 +307,7 @@ The `essential` object contains core parameters that must be set for the pipelin
 
 **Sound Conditions**:
 - `nan`: No sound (spontaneous activity)
-- `sync`: Sounds synchronized with respiratory phase
+- `sync`: Sounds synchronized with R peaks
 - `async`: Sounds presented asynchronously
 - `isoc`: Isochronous rhythmic stimuli
 - `baseline`: Pre-stimulus baseline period
@@ -340,20 +332,6 @@ selected_cond = config.essential.selected_cond;
 % Access other parameters
 fs = config.fs;
 sync_combos = config.sync_parameters.combinations;
-```
-
-#### Modifying Parameters Programmatically
-```matlab
-% Update configuration for different analysis
-config.essential.selected_cond = 'awake';
-config.essential.path_folder = '/mnt/HDD2/piero/Losanna/data/';
-config.sync_parameters.T = 20;  % Increase minimum segment length
-
-% Save modified configuration
-json_str = jsonencode(config);
-fid = fopen('config/config_awake.json', 'w');
-fprintf(fid, '%s', json_str);
-fclose(fid);
 ```
 
 ### Quick Configuration Examples

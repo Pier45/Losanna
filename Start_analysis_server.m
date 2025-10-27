@@ -75,6 +75,10 @@ sound_codes = config.sound_codes;
 sleep_score_codes = config.sleep_score_codes;
 
 d = dir([path_folder selected_cond '/s*']);
+nums = cellfun(@(x) sscanf(x, 's%d'), {d.name});  % Extract numbers after 's'
+[~, order] = sort(nums);                       % Sort by numeric value
+d = d(order);
+
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
 d = d(is_match, :);
 for sub=1:length(sub_remove)
@@ -86,16 +90,18 @@ if not(exist(log_dir, 'dir'))
 end
 
 t = datetime;
-DateString = datestr(t); 
-log_file_name = ['analyis_log_' DateString '.txt'];
+DateString = char(t, "yyyy-MMM-dd_HH:mm:ss"); 
+log_file_name = ['analyis_log_' selected_cond '_' DateString '.txt'];
 diary([log_dir log_file_name]);
 diary on
+
+fprintf('Start analysis on %s\npath: %s\n \n ', selected_cond, path_folder);
 
 name_folder_T = [selected_cond '/T' num2str(T) '/'];
 for k = 1:length(d)
     
     sub_name = d(k).name;
-    fprintf('Start analysis %3s\n', sub_name);
+    fprintf('Analysing subject %3s\n', sub_name);
 
     if string(sub_name) == "s10"
         disp('')
@@ -105,6 +111,7 @@ for k = 1:length(d)
     for j = 1:number_folder
         if number_folder > 1
             night = ['n' num2str(j)];
+            fprintf('%35s\n', ['Night ' num2str(j)]);
             sel_path = [d(k).folder '/' sub_name '/' night '/'];
 
             %% Create a folder for the subject
@@ -136,16 +143,6 @@ for k = 1:length(d)
         ecg = data.ecg;
         respiration = data.res;
         sound = data.trg;
-%         if not(contains(path_folder, 'piero'))
-%             %% Loading in this way is faster x5 respect to single or full load
-%             mfile = matfile(raw_data_path);
-%             data = mfile.y(65:69,:);
-%             ecg = data(1,:);
-%             respiration = data(4,:);
-%             sound = data(5,:);
-%         else
-%             load(raw_data_path)
-%         end
         
         raw_data = struct();
         car = struct();
@@ -167,9 +164,6 @@ for k = 1:length(d)
             score_labels = zeros(1, length(ecg));
         end
         
-        %% Extraction of sound event
-        [sound_events] = extract_sound_info(sound, score_labels, sub_name, night, true, [path_save 'check_plots']);
-
         %% s22 remotion of outliers section -> now automatic thanks to clean_data_find_peaks
 %         if convertCharsToStrings(sub_name) == "s22" && convertCharsToStrings(night) == "n2"
 %             ecg_temp = ecg(raw_data.Awake.idx);
@@ -195,7 +189,10 @@ for k = 1:length(d)
             [res.(sleep_stages{s}).cycles_max, res.(sleep_stages{s}).cycles_min, res.(sleep_stages{s}).perc_remotion_min] = filter_res_cycles(res.(sleep_stages{s}).data_cln, res.(sleep_stages{s}).max_pks, res.(sleep_stages{s}).max_locs, res.(sleep_stages{s}).min_pks, res.(sleep_stages{s}).min_locs, fs, sleep_stages{s}, "plot", [path_checks '/BH_' sub_name '_' sleep_stages{s}]);
             f.(sleep_stages{s}) = phase_res(res.(sleep_stages{s}).cycles_min, res.(sleep_stages{s}).data_cln, car.(sleep_stages{s}).locs, 0, 'N0',"no");
         end
-    
+        
+        %% Extraction of sound event
+        [sound_events] = extract_sound_info(sound, sound_cond, sound_codes, sleep_stages, raw_data, sub_name, night, true, [path_save 'check_plots']);
+
         polar_hist_stages(f, 60, path_save);
 
         %% Extract sync data
@@ -235,8 +232,6 @@ for k = 1:length(d)
                     result.sleep_data.(sleep_stages{i}).h_bmp = car.(sleep_stages{i}).mean_bpm;
                     result.sleep_data.(sleep_stages{i}).r_bmp = res.(sleep_stages{i}).mean_bpm;
                     result.sleep_data.(sleep_stages{i}).night_phase_perc = round(raw_data.(sleep_stages{i}).perc,1);
-%                     result.sleep_data.(sleep_stages{i}).RR_window_pks = RR_window_pks;
-%                     result.sleep_data.(sleep_stages{i}).RR_window_len = RR_window_len;
                 end
                 
                 %% Save sound events results
@@ -284,23 +279,3 @@ for k = 1:length(d)
 end
 
 diary off
-
-% % Load the file to see structure
-% m = matfile('/home/piero/Desktop/sa/corrupted_raw_data.mat');
-% 
-% % Test each column
-% bad_cols = [];
-% for i = 1700000:2100000
-%     try
-%         temp = m.y(69, i);  % Try to read column i
-%         if mod(i, 1000) == 0
-%             fprintf('Column %d: OK\n', i);
-%         end
-%     catch ME
-%         fprintf('Column %d: CORRUPTED - %s\n', i, ME.message);
-%         bad_cols = [bad_cols, i];
-%     end
-% end
-% 
-% fprintf('\nCorrupted columns: ');
-% disp(bad_cols);
