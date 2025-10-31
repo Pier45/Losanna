@@ -1,25 +1,26 @@
+%% SCRIPT TO COMPUTE THE SYNC PERCENTAGE
+% Use this script only after the creation of the filtered data with
+% Extract_car_res
+
 clc
 close all
 clear
 
 addpath(genpath('../src'))
 
-%% Settable parameters
-sub = 's27';
+%% Path to the file, settable parameters
+path_load = '/mnt/HDD2/piero/Losanna/output/car_res_single_sub/car_resp_s28.mat';
+load(path_load)
 
 fs = 1024;
-T = 30;
-m = 1; n = 3;
+T = 20;
+m = 1; n = 4;
 delta = 5;
 %%
-
-dir_path = dir();
-name_path = [dir_path(strcmp({dir_path.name}, 'output')).folder '../output/card_resp/car_resp_' sub '.mat'];
-match = char(regexp(name_path, '_s\w+', 'match'));
-load(name_path)
+match = char(regexp(path_load, '_s\d+', 'match'));
 
 sleep_stages = fieldnames(res(1));
-sleep_stages_names = {'Awake', 'n1', 'n2', 'n3', 'REM'};
+sleep_stages_names = {'Awake', 'N1', 'N2', 'N3', 'REM'};
 
 result = struct();
 for i = 1:length(sleep_stages)

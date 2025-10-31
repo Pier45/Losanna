@@ -488,4 +488,4 @@ This project investigates fundamental mechanisms of cardiorespiratory coupling a
 ---
 
 **Last Updated**: 31 October 2025  
-**Version**: 4.5.8
+**Version**: 4.6.1
