@@ -24,16 +24,29 @@ function [sleepTable] = table_summary(sleep_stages, sound_cond, prov_struct)
             
     sleepTable = table(sleep_stages, sync_count, all_count, percentages, ...
                                'VariableNames', {'Stage', 'Sync_count', 'All_count','Percentage'});
-    
-    for i = 1:length(sound_cond)
-        sleepTable.(sound_cond{i}) = zeros(height(sleepTable), 1);
-    end
+                           
+    sound_group = ["no sound", "sound"]';
+    group1 = "baseline";
+    group2 = ["sync", "async", "isoch"];
 
+    % Create a table of zero columns
+    soundCols = cell2table(num2cell(zeros(height(sleepTable), numel(sound_cond))), ...
+                         'VariableNames', sound_cond);
+    
+    aggsoundCols = cell2table(num2cell(zeros(height(sleepTable), numel(sound_group))), ...
+                         'VariableNames', sound_group);                 
+    
+    % Concatenate with the original table
+    sleepTable = [sleepTable soundCols aggsoundCols];
+    
     for slstage=1:length(sleep_stages)
         if any(ismember(fieldnames(prov_struct), sleep_stages{slstage})) && not(isempty(prov_struct.(sleep_stages{slstage}).sound_table))
             sleepTable{slstage, sound_cond} = prov_struct.(sleep_stages{slstage}).sound_table.Percentage;%% trasposto-testare
+            
+            sleepTable{slstage, sound_group} = [sum(table2array(sleepTable(slstage, group1)),2), mean(table2array(sleepTable(slstage, group2)),2)];
         end
     end
-        
+    
+
 end
 

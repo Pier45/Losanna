@@ -5,17 +5,27 @@ clc
 addpath(genpath('src'))
 
 %% Select the folder, 1 sleep, 2 awake
-conditions = ["sleep/T30"; "awake/T15"];
-selected_cond = char(conditions(2,:));
+conditions = ["sleep/T30"; "awake/T15"; "sleep/T15"; "awake/T30"];
+selected_cond = char(conditions(3,:));
 
 path_folder = ['output/', selected_cond];
 d = dir([path_folder '/s*']);
 is_match = ~cellfun(@isempty, regexp({d.name}, '^s\d+$'));
 d = d(is_match, :);
 
+fid = fopen('/mnt/HDD2/piero/Losanna/config/config.json');
+raw = fread(fid, inf);
+str = char(raw');
+fclose(fid);
+config = jsondecode(str);
+sound_cond = config.sound_cond;
+sound_codes = config.sound_codes;
+sleep_score_codes = config.sleep_score_codes;
+start_folder = 1;
+
 if contains(selected_cond, 'sleep')
     number_folder = 2;
-    sleep_stages = {'Awake', 'REM', 'n1', 'n2', 'n3'}';
+    sleep_stages = config.sleep_stages;
     sel_path = [d(1).folder '/' d(1).name '/n1/' ];
 else
     number_folder = 1;
@@ -23,12 +33,14 @@ else
     sel_path = [d(1).folder '/' d(1).name '/' ];
 end
 
+%% To create a single night dataset DE-COMMENT with EXTREME CARE
+single_night_mode = false; % true
+% start_folder = 1;
+% number_folder = 2;
+
 %% s31 at the moment has only one night
 d(strcmp({d.name}, 's31')) = [];
 %%
-
-sound_cond = {'nan', 'sync', 'async', 'isoc', 'baseline'};
-sound_codes = [0, 96, 160, 128, 192];
 
 raw_data_path = [sel_path 'result.mat'];
 load(raw_data_path);        
@@ -42,8 +54,8 @@ for k = 1:length(d)
         disp('')
     end
 
-    for j = 1:number_folder
-        if number_folder > 1
+    for j = start_folder:number_folder
+        if number_folder > 1 || single_night_mode == true
             night = ['n' num2str(j)];
             sel_path = [d(k).folder '/' sub_name '/' night '/'];
 
@@ -147,7 +159,6 @@ for k = 1:length(d)
                 
                 agg_result.(sub_name).general_table = newTable;
             end
-
         end
     end
     

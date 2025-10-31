@@ -1,8 +1,8 @@
 % Script Name: Start_analyis_server 
 %
 % Description:
-%   Analyzes nighttime raw data to detect and extract synchrony events, 
-%   revealing temporal patterns of coordinated activity.
+%   Analyzes nighttime and awake raw data to detect and extract synchrony 
+%   events, revealing temporal patterns of coordinated activity.
 %
 % Author:
 %   Piero Policastro
@@ -11,26 +11,8 @@
 % Created: 2025-09-11
 %
 % License:
-%   MIT License
+%   Apache
 %   Copyright (c) 2025 Piero Policastro
-%
-%   Permission is hereby granted, free of charge, to any person obtaining a 
-%   copy of this software and associated documentation files (the "Software"), 
-%   to deal in the Software without restriction, including without limitation 
-%   the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-%   and/or sell copies of the Software, and to permit persons to whom the 
-%   Software is furnished to do so, subject to the following conditions:
-%
-%   The above copyright notice and this permission notice shall be included 
-%   in all copies or substantial portions of the Software.
-%
-%   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-%   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-%   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-%   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-%   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-%   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-%   DEALINGS IN THE SOFTWARE.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear
@@ -62,14 +44,14 @@ if selected_cond == "awake"
 end
 
 fs = config.fs;
-T = config.sync_parameters.T;
-delta = config.sync_parameters.delta;
+T = config.essential.sync_parameters.T;
+delta = config.essential.sync_parameters.delta;
 RR_window_pks = config.filters_parameter.RR_window_pks;
 RR_window_len = config.filters_parameter.RR_window_len;
 sf_res = config.filters_parameter.sf_res;
 sf_car = config.filters_parameter.sf_car;
 
-combinations = config.sync_parameters.combinations;
+combinations = config.essential.sync_parameters.combinations;
 sound_cond = config.sound_cond;
 sound_codes = config.sound_codes;
 sleep_score_codes = config.sleep_score_codes;
@@ -91,11 +73,11 @@ end
 
 t = datetime;
 DateString = char(t, "yyyy-MMM-dd_HH:mm:ss"); 
-log_file_name = ['analyis_log_' selected_cond '_' DateString '.txt'];
+log_file_name = ['analyis_log_' selected_cond '_T' num2str(T) '_' DateString '.txt'];
 diary([log_dir log_file_name]);
 diary on
 
-fprintf('Start analysis on %s\npath: %s\n \n ', selected_cond, path_folder);
+fprintf('Start analysis on %s\n path: %s\n Window seconds:%d\n\n', selected_cond, path_folder, T);
 
 name_folder_T = [selected_cond '/T' num2str(T) '/'];
 for k = 1:length(d)

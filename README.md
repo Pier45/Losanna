@@ -4,7 +4,7 @@
 > Investigating the dynamic coupling between respiratory cycles and cardiac activity, and its modulation by auditory stimuli
 
 [![MATLAB](https://img.shields.io/badge/MATLAB-2025a%20%7C%202019a-orange.svg)](https://www.mathworks.com/products/matlab.html)
-[![License](https://img.shields.io/badge/license-TBD-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
@@ -43,6 +43,7 @@ The toolkit processes multi-modal physiological recordings collected during both
 ### Visualization & Reporting
 - **Polar histograms** showing phase distribution across sleep stages
 - **Aggregated statistics** with boxplots and bar charts
+- **Statistical significance markers** for group comparisons
 
 ---
 
@@ -125,14 +126,15 @@ The `utils/` folder provides comprehensive tools for development, testing, and d
 |--------|---------|----------|
 | `SimulatedSignal.m` | Generate synthetic cardiorespiratory signals with controlled synchronization patterns | Algorithm validation with known ground truth |
 | `Create_data.m` | Extract lightweight datasets containing only ECG and respiration channels | Reduce data size for development/sharing |
+| `Create_single_sub_data.m` | Extract single subject data for testing and debugging | Quick iteration on algorithm development |
 
 #### Data Loading & Import
 | Script | Purpose | Format |
 |--------|---------|--------|
-| `Load_single_raw_data.m` | Load and inspect individual subject recordings | `.xdf` files |
 | `load_xdf.m` | Import Lab Streaming Layer (LSL) recordings | `.xdf` format |
 | `load_xdf_innerloop.mexa64` | Compiled MEX function for accelerated XDF parsing | Binary (Linux x64) |
-| `create_raw_data.m` | Function for the dataset creation, and managing special subject like 17 | For the Create_data script |
+| `create_raw_data.m` | Function for dataset creation and managing special subjects like 17 | For the Create_data script |
+| `analyze_field.m` | Inspect and analyze specific fields within data structures | Data exploration and debugging |
 
 > **Note**: `load_xdf_innerloop.mexa64` is compiled for Linux 64-bit systems. If running on Windows or macOS, you may need to recompile from source or use the pure MATLAB fallback in `load_xdf.m`.
 
@@ -142,6 +144,7 @@ The `utils/` folder provides comprehensive tools for development, testing, and d
 | `Correpted_identifier.m` | Scan data directories for corrupted, incomplete, or malformed files | Before batch processing to identify problematic recordings |
 | `Extract_car_res.m` | Validate preprocessing pipeline on individual subjects with visual feedback | Debug filtering, peak detection, or artifact removal |
 | `Extract_sync.m` | Test synchronization detection algorithms with detailed diagnostic plots | Verify m:n ratio detection, phase calculations, or threshold settings |
+| `Statistical_analysis.m` | Perform statistical tests and generate summary statistics | Post-processing analysis and hypothesis testing |
 
 ---
 
@@ -162,10 +165,10 @@ losanna/
 │   ├── 📂 awake/                    # Wakefulness condition data
 │   └── 📂 sleep/                    # Sleep condition data (staged)
 │
-├── 📂 log/                          # Log folder
-│   └── analysis_log.txt            # Log of the Start_analysis_server.m script
+├── 📂 log/                          # Analysis execution logs
+│   └── analyis_log_<cond>_T<value>_<timestamp>.txt  # Timestamped processing logs
 │
-├── 📂 output/                       # Output folder
+├── 📂 output/                       # Analysis results
 │   ├── 📂 awake/                    # Wakefulness condition output
 │   └── 📂 sleep/                    # Sleep condition output
 │
@@ -177,7 +180,8 @@ losanna/
 │   │   ├── sync_phase2.m            # Compute the percentage of sync cycles
 │   │   ├── sync_phase3.m            # Auditory event sync cycle stratification
 │   │   ├── extract_sound_info.m     # Auditory event parsing
-│   │   └── table_summary.m          # Generate summary statistics tables
+│   │   ├── table_summary.m          # Generate summary statistics tables
+│   │   └── table_summary.m~         # Backup file (exclude from version control)
 │   │
 │   ├── 📂 preprocessing/            # Signal cleaning & filtering
 │   │   ├── filter_res_cycles.m      # Respiratory signal filtering
@@ -188,6 +192,8 @@ losanna/
 │   └── 📂 graphs/                   # Visualization functions
 │       ├── polar_hist_stages.m      # Phase distribution by sleep stage
 │       ├── boxplot4stages.m         # Multi-stage boxplot comparisons
+│       ├── add_significance_bars.m  # Add statistical significance markers to plots
+│       ├── add_significance_bars_grouped.m  # Grouped significance markers
 │       ├── bar_sleep.m~             # Backup/temporary file (exclude from version control)
 │       ├── bar_single.m             # Single condition bar charts
 │       ├── bar_subplot.m            # Multi-panel bar chart layouts
@@ -198,9 +204,11 @@ losanna/
 │   ├── Correpted_identifier.m       # Data integrity checker (typo in filename)
 │   ├── Create_data.m                # Create a reduced dataset with ECG, Resp
 │   ├── create_raw_data.m            # Generate raw synthetic data files
+│   ├── Create_single_sub_data.m     # Extract single subject data for testing
 │   ├── Extract_car_res.m            # Preprocessing validation
 │   ├── Extract_sync.m               # Synchronization validation
-│   ├── Load_single_raw_data.m       # Load individual raw data files
+│   ├── Statistical_analysis.m       # Statistical testing utilities
+│   ├── analyze_field.m              # Field-level data inspection tool
 │   ├── load_xdf.m                   # XDF file format loader (Lab Streaming Layer)
 │   └── load_xdf_innerloop.mexa64    # Compiled MEX function for XDF parsing
 │
@@ -226,22 +234,21 @@ All analysis scripts read parameters from `config/config.json`:
 
 ```json
 {
-  "essential": { 
+  "essential":{ 
     "path_folder": "/mnt/HDD2/piero/Losanna/data/",
     "output_dir": "output/",
     "log_dir": "log/",
     "selected_cond": "sleep",
-    "subjects_remove": ["s31"]
+    "subjects_remove": ["s31"],
+    "sync_parameters":{  
+      "combinations": ["m1n2", "m1n3", "m1n4", "m1n5", "m1n6", "m2n5", "m2n7"],  
+      "T": 30,
+      "delta": 5
+    }
   },
   
   "conditions": ["sleep", "awake"],
   "number_folder": 2,
-  
-  "sync_parameters": {  
-    "combinations": ["m1n2", "m1n3", "m1n4", "m1n5", "m1n6", "m2n5", "m2n7"],  
-    "T": 15,
-    "delta": 5
-  },
   
   "fs": 1024,
   
@@ -252,8 +259,8 @@ All analysis scripts read parameters from `config/config.json`:
     "sf_car": 20
   },
   
-  "sound_cond": ["nan", "sync", "async", "isoc", "baseline"],
-  "sound_codes": [0, 96, 160, 128, 192],
+  "sound_cond": ["nan", "sync", "async", "isoch", "baseline"],
+  "sound_codes": [0, 96, 128, 160, 192],
   
   "sleep_stages": ["Awake", "N1", "N2", "N3", "REM"],
   "sleep_score_codes": [0, 1, 2, 3, 4]
@@ -272,6 +279,16 @@ The `essential` object contains core parameters that must be set for the pipelin
 | `log_dir` | string | Directory for analysis logs and processing reports | `"log/"` |
 | `selected_cond` | string | Active condition for current analysis | `"sleep"` |
 | `subjects_remove` | array | Subject IDs to exclude from batch processing | `["s31"]` |
+| `sync_parameters` | object | Synchronization detection settings (nested within essential) | See below |
+
+#### Synchronization Detection (nested in `essential`)
+| Parameter | Type | Description | Typical Values |
+|-----------|------|-------------|----------------|
+| `combinations` | array | m:n synchronization ratios to test | `["m1n3", "m1n4", "m2n7"]` |
+| `T` | integer | Minimum segment length (in cycles) for synchronization detection | `10-30` |
+| `delta` | integer | Maximum allowed phase deviation (in degrees) for sync classification | `3-7` |
+
+**Synchronization Ratio Notation**: `"m1n3"` → 1 respiratory cycle : 3 R-peaks
 
 #### Dataset Configuration
 | Parameter | Type | Description | Example |
@@ -280,15 +297,6 @@ The `essential` object contains core parameters that must be set for the pipelin
 | `number_folder` | integer | Number of nested subdirectories in data structure | `2` |
 | `sleep_stages` | array | Sleep stage labels for classification | `["Awake", "N1", "N2", "N3", "REM"]` |
 | `sleep_score_codes` | array | Numerical codes corresponding to sleep stages | `[0, 1, 2, 3, 4]` |
-
-#### Synchronization Detection
-| Parameter | Type | Description | Typical Values |
-|-----------|------|-------------|----------------|
-| `combinations` | array | m:n synchronization ratios to test | `["m1n3", "m1n4", "m2n7"]` |
-| `T` | integer | Minimum segment length (in cycles) for synchronization detection | `10-30` |
-| `delta` | integer | Maximum allowed phase deviation (in degrees) for sync classification | `3-7` |
-
-**Synchronization Ratio Notation**: `"m1n3"` → 1 respiratory cycle : 3 R-peaks
 
 #### Signal Processing
 | Parameter | Type | Description | Recommended |
@@ -302,14 +310,14 @@ The `essential` object contains core parameters that must be set for the pipelin
 #### Auditory Stimulation
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
-| `sound_cond` | array | Sound condition labels | `["nan", "sync", "async", "isoc", "baseline"]` |
-| `sound_codes` | array | Numerical event codes matching `sound_cond` order | `[0, 96, 160, 128, 192]` |
+| `sound_cond` | array | Sound condition labels | `["nan", "sync", "async", "isoch", "baseline"]` |
+| `sound_codes` | array | Numerical event codes matching `sound_cond` order | `[0, 96, 128, 160, 192]` |
 
 **Sound Conditions**:
 - `nan`: No sound (spontaneous activity)
 - `sync`: Sounds synchronized with R peaks
 - `async`: Sounds presented asynchronously
-- `isoc`: Isochronous rhythmic stimuli
+- `isoch`: Isochronous rhythmic stimuli
 - `baseline`: Pre-stimulus baseline period
 
 #### Quality Control
@@ -329,19 +337,32 @@ path_folder = config.essential.path_folder;
 output_dir = config.essential.output_dir;
 selected_cond = config.essential.selected_cond;
 
+% Access synchronization parameters (nested in essential)
+sync_combos = config.essential.sync_parameters.combinations;
+T_value = config.essential.sync_parameters.T;
+delta_value = config.essential.sync_parameters.delta;
+
 % Access other parameters
 fs = config.fs;
-sync_combos = config.sync_parameters.combinations;
 ```
 
 ### Quick Configuration Examples
 
 #### Testing New Synchronization Ratios
 ```json
-"sync_parameters": {
-  "combinations": ["m1n2", "m1n5", "m3n10"],
-  "T": 15,
-  "delta": 5
+{
+  "essential": {
+    "path_folder": "/mnt/HDD2/piero/Losanna/data/",
+    "output_dir": "output/",
+    "log_dir": "log/",
+    "selected_cond": "sleep",
+    "subjects_remove": [],
+    "sync_parameters": {
+      "combinations": ["m1n2", "m1n5", "m3n10"],
+      "T": 30,
+      "delta": 5
+    }
+  }
 }
 ```
 
@@ -353,7 +374,12 @@ sync_combos = config.sync_parameters.combinations;
     "path_folder": "/mnt/HDD2/piero/Losanna/data/",
     "output_dir": "output/",
     "log_dir": "log/",
-    "subjects_remove": []
+    "subjects_remove": [],
+    "sync_parameters": {
+      "combinations": ["m1n3", "m1n4"],
+      "T": 30,
+      "delta": 5
+    }
   },
   "sleep_stages": ["Awake"]
 }
@@ -361,10 +387,14 @@ sync_combos = config.sync_parameters.combinations;
 
 #### Strict Synchronization Criteria
 ```json
-"sync_parameters": {
-  "combinations": ["m1n3", "m1n4"],
-  "T": 25,
-  "delta": 3
+{
+  "essential": {
+    "sync_parameters": {
+      "combinations": ["m1n3", "m1n4"],
+      "T": 25,
+      "delta": 3
+    }
+  }
 }
 ```
 
@@ -384,7 +414,7 @@ sync_combos = config.sync_parameters.combinations;
 
 ---
 
-**Next Steps**: After configuring parameters, proceed to [Pipeline Workflow](#-pipeline-workflow) to begin analysis.
+**Next Steps**: After configuring parameters, proceed to [Pipeline Workflow](#🔬-pipeline-workflow) to begin analysis.
 
 ---
 
@@ -411,8 +441,18 @@ The analysis generates comprehensive outputs including:
 - **Phase distribution plots** showing preferred coupling angles
 - **Sound modulation effects** with pre/during/post comparisons
 - **Subject-level reports** with quality metrics and artifact logs
+- **Statistical significance testing** across conditions and stages
 
-All figures are automatically saved in publication-ready format (high-resolution PNG).
+All figures are automatically saved in high-resolution PNG.
+
+---
+
+## Known BUGs
+
+The bug that are known and should be fixed are:
+
+- **add_significance_bars_grouped** bar are in the wrong position
+- **Phase distribution plots** showing preferred coupling angles
 
 ---
 
@@ -428,7 +468,7 @@ Contributions are welcome! Please feel free to:
 
 ## 📬 Contact
 
-**Principal Investigator**: Piero Policastro
+**Principal Investigator**: Piero Policastro  
 📧 Email: [piero.policastro@gmail.com](mailto:piero.policastro@gmail.com)
 
 For bug reports or technical questions, please open an issue on the repository.
@@ -439,7 +479,6 @@ For bug reports or technical questions, please open an issue on the repository.
 
 This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
 
-
 ---
 
 ## 🙏 Acknowledgments
@@ -448,8 +487,5 @@ This project investigates fundamental mechanisms of cardiorespiratory coupling a
 
 ---
 
-**Last Updated**: October 2025
-**Version**: 4.5.5
-
-
-
+**Last Updated**: 31 October 2025  
+**Version**: 4.5.8

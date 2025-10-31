@@ -20,7 +20,7 @@ raw = fread(fid, inf);
 str = char(raw');
 fclose(fid);
 config = jsondecode(str);
-combinations = config.sync_parameters.combinations;
+combinations = config.essential.sync_parameters.combinations;
 sound_cond = config.sound_cond;
 sound_codes = config.sound_codes;
 sleep_score_codes = config.sleep_score_codes;
@@ -159,11 +159,12 @@ end
 [res.REM.cycles_max, res.REM.cycles_min] = filter_res_cycles(res.REM.data_cln, res.REM.max_pks, res.REM.max_locs, res.REM.min_pks, res.REM.min_locs, fs, 'REM', "plot", 'no');
 
 %% Plot in polar coordianates the the R peaks signals in a respiratory cycle. 
-f.(sleep_stages(1)) = phase_res(res.Awake.cycles_min, res.Awake.data_cln, car.Awake.locs, 0,'Awake',"no");
-f.(sleep_stages(2)) = phase_res(res.N1.cycles_min, res.N1.data_cln, car.N1.locs, 0,'N1', "no");
-f.(sleep_stages(3)) = phase_res(res.N2.cycles_min, res.N2.data_cln, car.N2.locs, 0,'N2', "no");
-f.(sleep_stages(4)) = phase_res(res.N3.cycles_min, res.N3.data_cln, car.N3.locs, 0,'N3', "no");
-f.(sleep_stages(5)) = phase_res(res.REM.cycles_min, res.REM.data_cln, car.REM.locs, 0,'REM', "no");
+f = struct();
+f.(sleep_stages{1}) = phase_res(res.Awake.cycles_min, res.Awake.data_cln, car.Awake.locs, 0,'Awake',"no");
+f.(sleep_stages{2}) = phase_res(res.N1.cycles_min, res.N1.data_cln, car.N1.locs, 0,'N1', "no");
+f.(sleep_stages{3}) = phase_res(res.N2.cycles_min, res.N2.data_cln, car.N2.locs, 0,'N2', "no");
+f.(sleep_stages{4}) = phase_res(res.N3.cycles_min, res.N3.data_cln, car.N3.locs, 0,'N3', "no");
+f.(sleep_stages{5}) = phase_res(res.REM.cycles_min, res.REM.data_cln, car.REM.locs, 0,'REM', "no");
 
 polar_hist_stages(f, 60, '');
 

@@ -55,10 +55,10 @@ function bar_subplot(sleep_stages, sub_name, title_info, m, n, sound_cond,sleepT
             ];
     
     sound_group = ["no sound", "sound"]';
-    group1 = ["baseline", "nan"];
+    group1 = "baseline";
     group2 = ["sync", "async", "isoch"];
     
-    data_to_plot_3 = [sum(table2array(sleepTable(:, group1)),2), sum(table2array(sleepTable(:, group2)),2)];
+    data_to_plot_3 = [sum(table2array(sleepTable(:, group1)),2), mean(table2array(sleepTable(:, group2)),2)];
     bar_single(data_to_plot_3, sleep_stages, sound_group, 'Sync % in each sound event', colors2);
     
     %% Save
