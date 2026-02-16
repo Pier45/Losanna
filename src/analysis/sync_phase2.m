@@ -1,4 +1,4 @@
-function [perc_sync, sync_cycle, sync_samples, total_samples_filtered] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, graph)
+function [perc_sync, sync_cycle, sync_samples, total_samples_filtered] = sync_phase2(m_cycle, phase, R_locs, std_w, saved_windows, m, n, delta, sleep_stage, fs, graph)
 % SYNC_PHASE2 compute the percentage of synchronized cycles under the threshold.
     
     if not(isempty(m_cycle)) && not(length(m_cycle) == 1)
@@ -32,24 +32,35 @@ function [perc_sync, sync_cycle, sync_samples, total_samples_filtered] = sync_ph
         perc_sync = 100*sync_samples/total_samples_filtered;
 
         if graph && perc_sync~=0
+            t = 0:1/fs:length(phase)/fs;
+            t(end) = [];
+
             figure
-            plot(phase)
+            plot(t, phase)
+            xlabel('Time (s)');
+            ylabel('Phase');
             hold on 
-            plot(R_locs, phase(R_locs), 'o', 'MarkerFaceColor','red')
+            plot(R_locs/fs, phase(R_locs), 'o', 'MarkerFaceColor','red')
             % Not compatible with Matlab 2019a
             % xregion(m_cycle(sync_cycle,1), m_cycle(sync_cycle,2), FaceColor="b")
-            start = m_cycle(sync_cycle,1);
-            stop = m_cycle(sync_cycle,2);
+            start = m_cycle(sync_cycle,1)/fs;
+            stop = m_cycle(sync_cycle,2)/fs;
             draw_xregion(start, stop, ylim, 'b', 0.3);
             for i = 1:length(index_cycle_selected)
-                xline(m_cycle(index_cycle_selected(i),1), '-', num2str(index_cycle_selected(i)));
+                xline(m_cycle(index_cycle_selected(i),1)/fs, '-', num2str(index_cycle_selected(i)));
             end
-            title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+            % title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+            legend('Phase of respiratory signal', 'R peaks')
             ax = gca; % Get current axes
-            ax.FontSize = 14;
+            ax.FontSize = 16;
+            ti = ax.TightInset;
+            ax.Position = [ti(1) ti(2)+0.1 1-ti(3)-ti(1) 1-ti(4)-ti(2)-0.11];
 
             figure
             bar(std_w)
+            % Finalize the bar plot with labels and title
+            xlabel('Cycle Index');
+            ylabel('Standard Deviation');
             string_vector = arrayfun(@num2str, 1:n, 'UniformOutput', false);
             hold on
             plot(avg_std, '*', 'MarkerSize',15)
@@ -59,10 +70,12 @@ function [perc_sync, sync_cycle, sync_samples, total_samples_filtered] = sync_ph
             for i = 1:length(index_cycle_selected)
                 xline(index_cycle_selected(i), '-', num2str(index_cycle_selected(i)));
             end
-            title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
+            % title(['Sleep phase ' sleep_stage '   -   Respiratory cycles sync: ' num2str(round(perc_sync,2)) '%'])
             legend(string_vector{:}, 'mean std for cycle')
             ax = gca; % Get current axes
-            ax.FontSize = 14;
+            ax.FontSize = 16;
+            ti = ax.TightInset;
+            ax.Position = [ti(1) ti(2)+0.1 1-ti(3)-ti(1) 1-ti(4)-ti(2)-0.11];
         end
     else
         perc_sync = 0;
